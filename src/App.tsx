@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { QrForm } from './components/QrForm'
 import { QrPreview } from './components/QrPreview'
 import { ColorModeToggle } from './components/ColorModeToggle'
+import { AppFooter } from './components/AppFooter'
 import {
   DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
@@ -157,6 +158,7 @@ function App() {
               />
             </Box>
           </Stack>
+          <AppFooter />
         </Stack>
       </Container>
     </Box>
