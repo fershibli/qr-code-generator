@@ -20,12 +20,15 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "@types/node": "^24.13.3",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
     "oxlint": "^1.79.0",
+    "semantic-release": "^25.0.9",
     "typescript": "~6.0.2",
     "vite": "^8.2.2"
   }
