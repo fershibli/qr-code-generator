@@ -2,6 +2,8 @@
 
 A single-page React + Material UI app that generates PNG QR codes with an optional centered logo.
 
+**Live:** [fershibli.github.io/qr-code-generator](https://fershibli.github.io/qr-code-generator/)
+
 ```bash
 npm install
 npm run dev
