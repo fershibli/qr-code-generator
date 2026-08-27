@@ -2,7 +2,7 @@ import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import Stack from '@mui/material/Stack'
 import Switch from '@mui/material/Switch'
-import { useColorModeContext } from './ColorModeProvider'
+import { useColorModeContext } from './colorModeContext'
 
 export function ColorModeToggle() {
   const { mode, toggleColorMode } = useColorModeContext()
@@ -17,7 +17,7 @@ export function ColorModeToggle() {
       <Switch
         checked={isDark}
         onChange={toggleColorMode}
-        inputProps={{ 'aria-label': 'Toggle dark mode' }}
+        slotProps={{ input: { 'aria-label': 'Toggle dark mode' } }}
       />
       <DarkModeOutlinedIcon
         fontSize="small"
