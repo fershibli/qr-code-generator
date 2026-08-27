@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/fershibli/qr-code-generator/compare/v1.1.0...v1.2.0) (2026-08-27)
+
+
+### Features
+
+* persist recent logos in the browser ([55d4cf3](https://github.com/fershibli/qr-code-generator/commit/55d4cf35f45638842ff1d8b13e2e560d99c26556))
+* show version and GitHub link in the footer ([cfd7c24](https://github.com/fershibli/qr-code-generator/commit/cfd7c24dbca4ecde88e49c791fd09b9e60e9a641))
+
 # [1.1.0](https://github.com/fershibli/qr-code-generator/compare/v1.0.0...v1.1.0) (2026-08-27)
 
 
