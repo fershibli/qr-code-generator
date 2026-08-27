@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
 import { QrForm } from './components/QrForm'
 import { QrPreview } from './components/QrPreview'
+import { ColorModeToggle } from './components/ColorModeToggle'
 import {
   DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
@@ -100,15 +101,25 @@ function App() {
     <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
       <Container maxWidth="lg">
         <Stack spacing={4}>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              QR Code Generator
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Create a PNG QR code for any URL, with an optional logo in the
-              center.
-            </Typography>
-          </Box>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{
+              justifyContent: 'space-between',
+              alignItems: { xs: 'center', md: 'flex-start' },
+            }}
+          >
+            <Box>
+              <Typography variant="h4" component="h1" gutterBottom>
+                QR Code Generator
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Create a PNG QR code for any URL, with an optional logo in the
+                center.
+              </Typography>
+            </Box>
+            <ColorModeToggle />
+          </Stack>
 
           <Stack
             direction={{ xs: 'column', md: 'row' }}
