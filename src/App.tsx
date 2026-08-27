@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { QrForm } from './components/QrForm'
 import { QrPreview } from './components/QrPreview'
 import {
+  DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
   DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
@@ -27,6 +28,7 @@ function App() {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
+  const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -56,6 +58,7 @@ function App() {
         size,
         resolution,
         margin,
+        logoPadding,
       })
         .then((result) => {
           if (cancelled) {
@@ -91,7 +94,7 @@ function App() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [trimmedUrl, logoFile, size, resolution, margin])
+  }, [trimmedUrl, logoFile, size, resolution, margin, logoPadding])
 
   return (
     <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
@@ -121,6 +124,8 @@ function App() {
                 onLogoChange={handleLogoChange}
                 size={size}
                 onSizeChange={setSize}
+                logoPadding={logoPadding}
+                onLogoPaddingChange={setLogoPadding}
                 margin={margin}
                 onMarginChange={setMargin}
                 resolution={resolution}
