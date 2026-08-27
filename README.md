@@ -11,3 +11,7 @@ npm run dev
 - **Logo** (optional) is drawn in the center. Logo size appears only after a logo is uploaded.
 - **Resolution** is the exported square size: 250×250 through 1750×1750.
 - Preview is always 500×500 px. Download is a `.png` with no alpha channel.
+
+## Deploy
+
+Pushes to `main` publish the app to GitHub Pages and, when commits follow [Conventional Commits](https://www.conventionalcommits.org/), create a semantic GitHub release (`feat` → minor, `fix` → patch, `BREAKING CHANGE` → major).
