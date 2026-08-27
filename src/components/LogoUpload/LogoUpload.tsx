@@ -12,7 +12,7 @@ import {
   logoFingerprint,
   saveLogo,
   type CachedLogo,
-} from '../utils/logoCache'
+} from '../../utils/logoCache'
 
 type LogoUploadProps = {
   file: File | null

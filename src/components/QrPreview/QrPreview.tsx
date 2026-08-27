@@ -7,7 +7,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Paper from '@mui/material/Paper'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import { PREVIEW_SIZE } from '../constants'
+import { PREVIEW_SIZE } from '../../constants'
 
 type QrPreviewProps = {
   previewUrl: string | null

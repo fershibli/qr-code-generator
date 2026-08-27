@@ -1,8 +1,8 @@
 import { useMemo, type ReactNode } from 'react'
 import { ThemeProvider } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
-import { useColorMode } from '../hooks/useColorMode'
-import { createAppTheme } from '../theme'
+import { useColorMode } from '../../hooks/useColorMode'
+import { createAppTheme } from '../../theme'
 import { ColorModeContext } from './colorModeContext'
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
