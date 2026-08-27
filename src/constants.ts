@@ -13,3 +13,4 @@ export const MAX_QR_MARGIN = 10
 export const DEFAULT_LOGO_PADDING = 5
 export const MIN_LOGO_PADDING = 0
 export const MAX_LOGO_PADDING = 25
+export const MAX_RECENT_LOGOS = 8
