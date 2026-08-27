@@ -20,8 +20,8 @@ import {
   MIN_LOGO_PADDING,
   RESOLUTIONS,
   type Resolution,
-} from '../constants'
-import { LogoUpload } from './LogoUpload'
+} from '../../constants'
+import { LogoUpload } from '../LogoUpload'
 
 type QrFormProps = {
   url: string

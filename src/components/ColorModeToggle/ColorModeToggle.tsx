@@ -2,7 +2,7 @@ import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined'
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined'
 import Stack from '@mui/material/Stack'
 import Switch from '@mui/material/Switch'
-import { useColorModeContext } from './colorModeContext'
+import { useColorModeContext } from '../ColorModeProvider'
 
 export function ColorModeToggle() {
   const { mode, toggleColorMode } = useColorModeContext()

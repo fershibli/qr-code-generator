@@ -1,0 +1,1 @@
+export { QrForm } from './QrForm'
