@@ -10,8 +10,11 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import {
   DEFAULT_LOGO_SIZE,
+  DEFAULT_QR_MARGIN,
   MAX_LOGO_SIZE,
+  MAX_QR_MARGIN,
   MIN_LOGO_SIZE,
+  MIN_QR_MARGIN,
   RESOLUTIONS,
   type Resolution,
 } from '../constants'
@@ -25,6 +28,8 @@ type QrFormProps = {
   onLogoChange: (file: File | null) => void
   size: number
   onSizeChange: (value: number) => void
+  margin: number
+  onMarginChange: (value: number) => void
   resolution: Resolution
   onResolutionChange: (value: Resolution) => void
 }
@@ -37,6 +42,8 @@ export function QrForm({
   onLogoChange,
   size,
   onSizeChange,
+  margin,
+  onMarginChange,
   resolution,
   onResolutionChange,
 }: QrFormProps) {
@@ -92,6 +99,30 @@ export function QrForm({
             </Typography>
           </Box>
         ) : null}
+
+        <Box>
+          <Typography variant="subtitle2" gutterBottom>
+            QR margin ({margin} modules)
+          </Typography>
+          <Slider
+            value={margin}
+            min={MIN_QR_MARGIN}
+            max={MAX_QR_MARGIN}
+            step={1}
+            valueLabelDisplay="auto"
+            onChange={(_event, value) => {
+              onMarginChange(Array.isArray(value) ? value[0] : value)
+            }}
+            marks={[
+              { value: MIN_QR_MARGIN, label: `${MIN_QR_MARGIN}` },
+              { value: DEFAULT_QR_MARGIN, label: `${DEFAULT_QR_MARGIN}` },
+              { value: MAX_QR_MARGIN, label: `${MAX_QR_MARGIN}` },
+            ]}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Quiet zone around the QR code, in modules.
+          </Typography>
+        </Box>
 
         <FormControl fullWidth>
           <InputLabel id="resolution-label">Resolution</InputLabel>

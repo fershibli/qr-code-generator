@@ -7,6 +7,7 @@ import { QrForm } from './components/QrForm'
 import { QrPreview } from './components/QrPreview'
 import {
   DEFAULT_LOGO_SIZE,
+  DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
   type Resolution,
 } from './constants'
@@ -26,6 +27,7 @@ function App() {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
+  const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
@@ -53,6 +55,7 @@ function App() {
         logoFile,
         size,
         resolution,
+        margin,
       })
         .then((result) => {
           if (cancelled) {
@@ -88,7 +91,7 @@ function App() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [trimmedUrl, logoFile, size, resolution])
+  }, [trimmedUrl, logoFile, size, resolution, margin])
 
   return (
     <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
@@ -118,6 +121,8 @@ function App() {
                 onLogoChange={handleLogoChange}
                 size={size}
                 onSizeChange={setSize}
+                margin={margin}
+                onMarginChange={setMargin}
                 resolution={resolution}
                 onResolutionChange={setResolution}
               />

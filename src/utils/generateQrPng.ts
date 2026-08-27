@@ -6,6 +6,7 @@ export type GenerateQrPngOptions = {
   logoFile?: File | null
   size: number
   resolution: number
+  margin: number
 }
 
 export type GenerateQrPngResult = {
@@ -60,11 +61,12 @@ export async function generateQrPng({
   logoFile,
   size,
   resolution,
+  margin,
 }: GenerateQrPngOptions): Promise<GenerateQrPngResult> {
   const qrCanvas = document.createElement('canvas')
   await QRCode.toCanvas(qrCanvas, url, {
     width: resolution,
-    margin: 2,
+    margin,
     errorCorrectionLevel: 'H',
     color: {
       dark: '#000000',

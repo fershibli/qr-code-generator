@@ -7,3 +7,6 @@ export const DEFAULT_RESOLUTION: Resolution = 500
 export const DEFAULT_LOGO_SIZE = 20
 export const MIN_LOGO_SIZE = 10
 export const MAX_LOGO_SIZE = 40
+export const DEFAULT_QR_MARGIN = 2
+export const MIN_QR_MARGIN = 0
+export const MAX_QR_MARGIN = 10
