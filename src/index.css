@@ -1,3 +1,11 @@
+html[data-color-mode='dark'] {
+  background: #121212;
+}
+
+html[data-color-mode='light'] {
+  background: #f4f6fb;
+}
+
 body {
   margin: 0;
 }
