@@ -1,0 +1,9 @@
+export const RESOLUTIONS = [250, 500, 750, 1000, 1250, 1500, 1750] as const
+
+export type Resolution = (typeof RESOLUTIONS)[number]
+
+export const PREVIEW_SIZE = 500
+export const DEFAULT_RESOLUTION: Resolution = 500
+export const DEFAULT_LOGO_SIZE = 20
+export const MIN_LOGO_SIZE = 10
+export const MAX_LOGO_SIZE = 40
