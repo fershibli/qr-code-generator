@@ -68,6 +68,12 @@ function readBytes(record: StoredLogo): Uint8Array {
   return toUint8Array(record.bytes)
 }
 
+function toArrayBufferBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
+  return copy
+}
+
 function toCachedLogo(record: StoredLogo, bytes: Uint8Array): CachedLogo {
   const type = record.type || 'image/png'
   return {
@@ -77,13 +83,13 @@ function toCachedLogo(record: StoredLogo, bytes: Uint8Array): CachedLogo {
     size: record.size,
     lastModified: record.lastModified,
     lastUsed: record.lastUsed,
-    blob: new Blob([bytes], { type }),
+    blob: new Blob([toArrayBufferBytes(bytes)], { type }),
   }
 }
 
 function toFile(record: StoredLogo, bytes: Uint8Array): File {
   const type = record.type || 'image/png'
-  return new File([bytes], record.name, {
+  return new File([toArrayBufferBytes(bytes)], record.name, {
     type,
     lastModified: record.lastModified,
   })
