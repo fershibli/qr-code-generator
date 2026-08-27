@@ -1,0 +1,172 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ColorModeProvider } from './components/ColorModeProvider'
+import App from './App'
+import { generateQrPng } from './utils/generateQrPng'
+
+vi.mock('./utils/generateQrPng', () => ({
+  generateQrPng: vi.fn(async () => ({
+    blob: new Blob(['png'], { type: 'image/png' }),
+    objectUrl: 'blob:qr-preview',
+    width: 500,
+    height: 500,
+  })),
+}))
+
+describe('App', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    document.documentElement.dataset.colorMode = 'light'
+    vi.mocked(generateQrPng).mockReset()
+    vi.mocked(generateQrPng).mockResolvedValue({
+      blob: new Blob(['png'], { type: 'image/png' }),
+      objectUrl: 'blob:qr-preview',
+      width: 500,
+      height: 500,
+    })
+  })
+
+  it('generates a preview from a URL and downloads it', async () => {
+    const user = userEvent.setup()
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => {})
+
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+
+    expect(
+      screen.getByRole('heading', { name: 'QR Code Generator' }),
+    ).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox', { name: /URL/ }), 'https://example.com')
+    await waitFor(() => {
+      expect(generateQrPng).toHaveBeenCalled()
+    })
+    await waitFor(() => {
+      expect(screen.getByAltText('QR code preview')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: 'Download' }))
+    expect(click).toHaveBeenCalled()
+    click.mockRestore()
+  })
+
+  it('shows a generation error', async () => {
+    const user = userEvent.setup()
+    vi.mocked(generateQrPng).mockRejectedValueOnce(new Error('boom'))
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    await user.type(screen.getByRole('textbox', { name: /URL/ }), 'https://bad.example')
+    await waitFor(() => {
+      expect(screen.getByText('boom')).toBeInTheDocument()
+    })
+  })
+
+  it('shows a fallback error message for non-Error failures', async () => {
+    const user = userEvent.setup()
+    vi.mocked(generateQrPng).mockRejectedValueOnce('nope')
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    await user.type(screen.getByRole('textbox', { name: /URL/ }), 'https://fail.example')
+    await waitFor(() => {
+      expect(screen.getByText('Failed to generate QR code')).toBeInTheDocument()
+    })
+  })
+
+  it('replaces and removes a selected logo', async () => {
+    const user = userEvent.setup()
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const first = new File([new Uint8Array([1, 2, 3, 4])], 'one.png', {
+      type: 'image/png',
+      lastModified: 1,
+    })
+    const second = new File([new Uint8Array([5, 6, 7, 8])], 'two.png', {
+      type: 'image/png',
+      lastModified: 2,
+    })
+    await user.upload(input, first)
+    expect(screen.getByText('one.png')).toBeInTheDocument()
+    await user.upload(input, second)
+    expect(screen.getByText('two.png')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Remove logo' }))
+    expect(screen.queryByText('two.png')).not.toBeInTheDocument()
+  })
+
+  it('ignores a stale generation result after the URL changes', async () => {
+    const user = userEvent.setup()
+    const result = {
+      blob: new Blob(['png'], { type: 'image/png' }),
+      objectUrl: 'blob:stale',
+      width: 500,
+      height: 500,
+    }
+    let resolveFirst: ((value: typeof result) => void) | undefined
+    vi.mocked(generateQrPng)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve
+          }),
+      )
+      .mockResolvedValue({
+        ...result,
+        objectUrl: 'blob:fresh',
+      })
+
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    const input = screen.getByRole('textbox', { name: /URL/ })
+    await user.type(input, 'https://first.example')
+    await waitFor(() => expect(generateQrPng).toHaveBeenCalledTimes(1))
+    await user.clear(input)
+    await user.type(input, 'https://second.example')
+    resolveFirst?.(result)
+    await waitFor(() => expect(generateQrPng).toHaveBeenCalledTimes(2))
+    await waitFor(() => {
+      expect(screen.getByAltText('QR code preview')).toHaveAttribute(
+        'src',
+        'blob:fresh',
+      )
+    })
+  })
+
+  it('ignores a stale generation error after unmount', async () => {
+    const user = userEvent.setup()
+    let rejectFirst: ((reason: unknown) => void) | undefined
+    vi.mocked(generateQrPng).mockImplementationOnce(
+      () =>
+        new Promise((_, reject) => {
+          rejectFirst = reject
+        }),
+    )
+    const { unmount } = render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    await user.type(
+      screen.getByRole('textbox', { name: /URL/ }),
+      'https://stale.example',
+    )
+    await waitFor(() => expect(generateQrPng).toHaveBeenCalledTimes(1))
+    unmount()
+    rejectFirst?.(new Error('stale'))
+  })
+})
