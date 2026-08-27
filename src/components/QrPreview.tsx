@@ -106,8 +106,17 @@ export function QrPreview({
           onClick={onDownload}
           fullWidth
         >
-          Download QR Code {resolution}x{resolution}px
+          Download
         </Button>
+        {previewUrl && !disabled ? (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ textAlign: 'center', width: '100%' }}
+          >
+            {resolution}x{resolution}px
+          </Typography>
+        ) : null}
       </Stack>
     </Paper>
   )

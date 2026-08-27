@@ -6,6 +6,8 @@ export type GenerateQrPngOptions = {
   logoFile?: File | null
   size: number
   resolution: number
+  margin: number
+  logoPadding: number
 }
 
 export type GenerateQrPngResult = {
@@ -36,9 +38,10 @@ function drawCenteredLogo(
   logo: HTMLImageElement,
   resolution: number,
   sizePercent: number,
+  logoPadding: number,
 ) {
   const logoPx = resolution * (sizePercent / 100)
-  const pad = logoPx * 0.05
+  const pad = logoPx * (logoPadding / 100)
   const boxSize = logoPx + pad * 2
   const boxX = (resolution - boxSize) / 2
   const boxY = (resolution - boxSize) / 2
@@ -60,11 +63,13 @@ export async function generateQrPng({
   logoFile,
   size,
   resolution,
+  margin,
+  logoPadding,
 }: GenerateQrPngOptions): Promise<GenerateQrPngResult> {
   const qrCanvas = document.createElement('canvas')
   await QRCode.toCanvas(qrCanvas, url, {
     width: resolution,
-    margin: 2,
+    margin,
     errorCorrectionLevel: 'H',
     color: {
       dark: '#000000',
@@ -86,7 +91,7 @@ export async function generateQrPng({
 
   if (logoFile) {
     const logo = await loadImage(logoFile)
-    drawCenteredLogo(ctx, logo, resolution, size)
+    drawCenteredLogo(ctx, logo, resolution, size, logoPadding)
   }
 
   const blob = await canvasToRgbPngBlob(canvas)

@@ -5,8 +5,11 @@ import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
 import { QrForm } from './components/QrForm'
 import { QrPreview } from './components/QrPreview'
+import { ColorModeToggle } from './components/ColorModeToggle'
 import {
+  DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
+  DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
   type Resolution,
 } from './constants'
@@ -26,6 +29,8 @@ function App() {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
+  const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
+  const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
@@ -53,6 +58,8 @@ function App() {
         logoFile,
         size,
         resolution,
+        margin,
+        logoPadding,
       })
         .then((result) => {
           if (cancelled) {
@@ -88,21 +95,31 @@ function App() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [trimmedUrl, logoFile, size, resolution])
+  }, [trimmedUrl, logoFile, size, resolution, margin, logoPadding])
 
   return (
     <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
       <Container maxWidth="lg">
         <Stack spacing={4}>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              QR Code Generator
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Create a PNG QR code for any URL, with an optional logo in the
-              center.
-            </Typography>
-          </Box>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{
+              justifyContent: 'space-between',
+              alignItems: { xs: 'center', md: 'flex-start' },
+            }}
+          >
+            <Box>
+              <Typography variant="h4" component="h1" gutterBottom>
+                QR Code Generator
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Create a PNG QR code for any URL, with an optional logo in the
+                center.
+              </Typography>
+            </Box>
+            <ColorModeToggle />
+          </Stack>
 
           <Stack
             direction={{ xs: 'column', md: 'row' }}
@@ -118,6 +135,10 @@ function App() {
                 onLogoChange={handleLogoChange}
                 size={size}
                 onSizeChange={setSize}
+                logoPadding={logoPadding}
+                onLogoPaddingChange={setLogoPadding}
+                margin={margin}
+                onMarginChange={setMargin}
                 resolution={resolution}
                 onResolutionChange={setResolution}
               />
