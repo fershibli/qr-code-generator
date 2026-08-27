@@ -1,3 +1,19 @@
+# [1.1.0](https://github.com/fershibli/qr-code-generator/compare/v1.0.0...v1.1.0) (2026-08-27)
+
+
+### Bug Fixes
+
+* split color mode context and Switch accessibility props ([7655507](https://github.com/fershibli/qr-code-generator/commit/7655507bfc221cbd3f59a6145ff95c031e6bbc1e))
+
+
+### Features
+
+* add adjustable logo padding control ([6351a6e](https://github.com/fershibli/qr-code-generator/commit/6351a6eb281f964c1852b78434b9c0fc5f672f93))
+* add adjustable QR quiet zone margin ([179b743](https://github.com/fershibli/qr-code-generator/commit/179b7430e11bd1156fc3935e83aeb20aedc57da8))
+* add color mode theme infrastructure ([7ea1f14](https://github.com/fershibli/qr-code-generator/commit/7ea1f145a7a8d62688f9a696c5077458d9d72e92))
+* add dark mode toggle in page header ([30cbc26](https://github.com/fershibli/qr-code-generator/commit/30cbc265ad531f82ff43b7b75695ecffa193b626))
+* simplify download button and resolution caption ([3555d03](https://github.com/fershibli/qr-code-generator/commit/3555d03b528dc89dc9dbc1647b8dd640a2e4a579))
+
 # 1.0.0 (2026-08-27)
 
 
