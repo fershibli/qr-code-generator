@@ -32,6 +32,22 @@ const GROUPED_KINDS = new Set<QrModuleKind>([
 
 type ModuleBox = { x: number; y: number; w: number; h: number }
 
+/** Grows or shrinks a box around a fixed center point. */
+function scaleBox(
+  box: ModuleBox,
+  centerX: number,
+  centerY: number,
+  scale: number,
+): ModuleBox {
+  if (scale === 1) return box
+  return {
+    x: centerX + (box.x - centerX) * scale,
+    y: centerY + (box.y - centerY) * scale,
+    w: box.w * scale,
+    h: box.h * scale,
+  }
+}
+
 function moduleBox(
   row: number,
   col: number,
@@ -114,19 +130,38 @@ function fillShape(
   )
 }
 
+type PatternGroupOptions = {
+  originRow: number
+  originCol: number
+  sizeModules: number
+  outerShape: QrModuleShape
+  centerShape: QrModuleShape
+  outerColor: string
+  centerColor: string
+  quietZoneColor: string
+  /** Drawn size of the mark, as a percentage of its module box. */
+  scalePercent: number
+  margin: number
+  moduleCount: number
+  resolution: number
+}
+
 function drawPatternGroup(
   ctx: CanvasRenderingContext2D,
-  originRow: number,
-  originCol: number,
-  sizeModules: number,
-  outerShape: QrModuleShape,
-  centerShape: QrModuleShape,
-  outerColor: string,
-  centerColor: string,
-  quietZoneColor: string,
-  margin: number,
-  moduleCount: number,
-  resolution: number,
+  {
+    originRow,
+    originCol,
+    sizeModules,
+    outerShape,
+    centerShape,
+    outerColor,
+    centerColor,
+    quietZoneColor,
+    scalePercent,
+    margin,
+    moduleCount,
+    resolution,
+  }: PatternGroupOptions,
 ) {
   const pupilModules = sizeModules === FINDER_SIZE ? 3 : 1
   const pupilInset = (sizeModules - pupilModules) / 2
@@ -155,12 +190,16 @@ function drawPatternGroup(
     resolution,
   )
 
+  const scale = scalePercent / 100
+  const centerX = outer.x + outer.w / 2
+  const centerY = outer.y + outer.h / 2
+
   ctx.fillStyle = outerColor
-  fillShape(ctx, outer, outerShape)
+  fillShape(ctx, scaleBox(outer, centerX, centerY, scale), outerShape)
   ctx.fillStyle = quietZoneColor
-  fillShape(ctx, hole, outerShape)
+  fillShape(ctx, scaleBox(hole, centerX, centerY, scale), outerShape)
   ctx.fillStyle = centerColor
-  fillShape(ctx, pupil, centerShape)
+  fillShape(ctx, scaleBox(pupil, centerX, centerY, scale), centerShape)
 }
 
 export function drawStyledQr(
@@ -199,36 +238,36 @@ export function drawStyledQr(
   }
 
   for (const [originRow, originCol] of getFinderOrigins(size)) {
-    drawPatternGroup(
-      ctx,
+    drawPatternGroup(ctx, {
       originRow,
       originCol,
-      FINDER_SIZE,
-      style.finder.outerShape,
-      style.finder.centerShape,
-      style.finder.outerColor,
-      style.finder.centerColor,
-      style.quietZoneColor,
+      sizeModules: FINDER_SIZE,
+      outerShape: style.finder.outerShape,
+      centerShape: style.finder.centerShape,
+      outerColor: style.finder.outerColor,
+      centerColor: style.finder.centerColor,
+      quietZoneColor: style.quietZoneColor,
+      scalePercent: style.finder.scale,
       margin,
       moduleCount,
       resolution,
-    )
+    })
   }
 
   for (const [centerRow, centerCol] of getAlignmentCenters(size)) {
-    drawPatternGroup(
-      ctx,
-      centerRow - ALIGNMENT_RADIUS,
-      centerCol - ALIGNMENT_RADIUS,
-      ALIGNMENT_SIZE,
-      style.alignment.shape,
-      style.alignment.shape,
-      style.alignment.outerColor,
-      style.alignment.centerColor,
-      style.quietZoneColor,
+    drawPatternGroup(ctx, {
+      originRow: centerRow - ALIGNMENT_RADIUS,
+      originCol: centerCol - ALIGNMENT_RADIUS,
+      sizeModules: ALIGNMENT_SIZE,
+      outerShape: style.alignment.shape,
+      centerShape: style.alignment.shape,
+      outerColor: style.alignment.outerColor,
+      centerColor: style.alignment.centerColor,
+      quietZoneColor: style.quietZoneColor,
+      scalePercent: style.alignment.scale,
       margin,
       moduleCount,
       resolution,
-    )
+    })
   }
 }
