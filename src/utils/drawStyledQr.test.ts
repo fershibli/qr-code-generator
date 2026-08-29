@@ -116,6 +116,47 @@ describe('drawStyledQr', () => {
     expect(ctx.fillRect).not.toHaveBeenCalledWith(10, 10, 10, 10)
   })
 
+  it('grows the finder mark around its center above 100%', () => {
+    const ctx = mockContext()
+    const style = createDefaultQrStyle()
+    style.finder.outerShape = 'circle'
+    style.finder.centerShape = 'circle'
+    style.finder.scale = 120
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 0 },
+      { resolution: 210, margin: 0, style },
+    )
+    expect(ctx.arc).toHaveBeenCalledWith(35, 35, 42, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(35, 35, 30, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(35, 35, 18, 0, Math.PI * 2)
+  })
+
+  it('shrinks the finder mark around its center below 100%', () => {
+    const ctx = mockContext()
+    const style = createDefaultQrStyle()
+    style.finder.scale = 60
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 0 },
+      { resolution: 210, margin: 0, style },
+    )
+    expect(ctx.fillRect).toHaveBeenCalledWith(14, 14, 42, 42)
+  })
+
+  it('shrinks the alignment mark around its own center', () => {
+    const ctx = mockContext()
+    const style = createDefaultQrStyle()
+    style.alignment.shape = 'circle'
+    style.alignment.scale = 60
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 25, get: () => 0 },
+      { resolution: 250, margin: 0, style },
+    )
+    expect(ctx.arc).toHaveBeenCalledWith(185, 185, 15, 0, Math.PI * 2)
+  })
+
   it('styles alignment as a group and timing modules individually', () => {
     const ctx = mockContext()
     const style = createDefaultQrStyle()

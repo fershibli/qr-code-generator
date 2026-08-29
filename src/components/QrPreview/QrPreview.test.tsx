@@ -88,8 +88,25 @@ describe('QrPreview', () => {
       'blob:preview',
     )
     expect(screen.getByText('750x750px')).toBeInTheDocument()
+    expect(screen.queryByText(/Version/)).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Download' }))
     expect(onDownload).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the encoded version and module count when known', () => {
+    renderWithTheme(
+      <QrPreview
+        previewUrl="blob:preview"
+        resolution={500}
+        version={7}
+        moduleCount={45}
+        loading={false}
+        error={null}
+        disabled={false}
+        onDownload={vi.fn()}
+      />,
+    )
+    expect(screen.getByText('Version 7 · 45×45 modules')).toBeInTheDocument()
   })
 
   it('shows an error and a loading overlay', () => {

@@ -100,6 +100,28 @@ describe('QrForm', () => {
     expect(props.onLogoTransparentBackgroundChange).toHaveBeenCalledWith(true)
   })
 
+  it('labels the density slider as automatic by default', () => {
+    renderForm()
+    expect(screen.getByText('Module density (automatic)')).toBeInTheDocument()
+  })
+
+  it('labels a forced version with its module count', () => {
+    renderForm({ minVersion: 10 })
+    expect(
+      screen.getByText('Module density (version 10, 57×57 modules)'),
+    ).toBeInTheDocument()
+  })
+
+  it('notifies parent when the density slider changes', async () => {
+    const user = userEvent.setup()
+    const { props } = renderForm()
+    const sliders = screen.getAllByRole('slider')
+    expect(sliders).toHaveLength(2)
+    sliders[1].focus()
+    await user.keyboard('{ArrowRight}')
+    expect(props.onMinVersionChange).toHaveBeenCalledWith(2)
+  })
+
   it('notifies parent when logo and margin sliders change', async () => {
     const user = userEvent.setup()
     const { props } = renderForm({
