@@ -19,6 +19,12 @@ export const MIN_QR_VERSION = 1
 export const MAX_QR_VERSION = 40
 export const DEFAULT_MIN_QR_VERSION = MIN_QR_VERSION
 
+export const MIN_CONTOUR_THICKNESS = 5
+export const MAX_CONTOUR_THICKNESS = 35
+export const DEFAULT_CONTOUR_THICKNESS = 15
+/** Modules of empty quiet zone kept between the code and the contour fill. */
+export const MIN_CONTOUR_GAP_MODULES = 4
+
 export const MIN_PATTERN_SCALE = 60
 export const MAX_PATTERN_SCALE = 140
 export const DEFAULT_PATTERN_SCALE = 100
