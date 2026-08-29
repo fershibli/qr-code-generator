@@ -89,4 +89,40 @@ describe('generateQrPng', () => {
 
     HTMLCanvasElement.prototype.getContext = original
   })
+
+  it('paints a quiet-zone backing behind the logo unless transparency is on', async () => {
+    const fillRect = vi.fn()
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function getContext(
+      this: HTMLCanvasElement,
+      ...args: Parameters<HTMLCanvasElement['getContext']>
+    ) {
+      const ctx = original.apply(this, args)
+      if (ctx) {
+        ctx.fillRect = fillRect
+      }
+      return ctx
+    } as HTMLCanvasElement['getContext']
+
+    const logo = new File([new Uint8Array([1, 2, 3])], 'logo.png', {
+      type: 'image/png',
+    })
+    const options = {
+      url: 'https://example.com',
+      logoFile: logo,
+      size: 20,
+      resolution: 250,
+      margin: 2,
+      logoPadding: 10,
+    }
+
+    await generateQrPng({ ...options, logoTransparentBackground: false })
+    expect(fillRect).toHaveBeenCalledWith(95, 95, 60, 60)
+
+    fillRect.mockClear()
+    await generateQrPng({ ...options, logoTransparentBackground: true })
+    expect(fillRect).not.toHaveBeenCalledWith(95, 95, 60, 60)
+
+    HTMLCanvasElement.prototype.getContext = original
+  })
 })

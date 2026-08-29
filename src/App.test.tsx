@@ -46,6 +46,13 @@ describe('App', () => {
     await waitFor(() => {
       expect(generateQrPng).toHaveBeenCalled()
     })
+    expect(generateQrPng).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'https://example.com',
+        style: expect.objectContaining({ quietZoneColor: '#ffffff' }),
+        logoTransparentBackground: false,
+      }),
+    )
     await waitFor(() => {
       expect(screen.getByAltText('QR code preview')).toBeInTheDocument()
     })

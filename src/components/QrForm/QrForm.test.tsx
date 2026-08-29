@@ -74,7 +74,19 @@ describe('QrForm', () => {
     expect(screen.queryByText('Quiet zone color')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Customize style' }))
     expect(screen.getByText('Quiet zone color')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Transparent logo background')).not.toBeInTheDocument()
+    expect(screen.queryByRole('switch', { name: 'Transparent logo background' })).not.toBeInTheDocument()
+  })
+
+  it('shows the transparent logo switch in the style section when a logo is set', async () => {
+    const user = userEvent.setup()
+    renderForm({
+      logoFile: file,
+      logoPreviewUrl: 'blob:logo',
+    })
+    await user.click(screen.getByRole('button', { name: 'Customize style' }))
+    expect(
+      screen.getByRole('switch', { name: 'Transparent logo background' }),
+    ).toBeInTheDocument()
   })
 
   it('notifies parent when logo and margin sliders change', async () => {
