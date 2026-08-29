@@ -11,6 +11,7 @@ export type GenerateQrPngOptions = {
   margin: number
   logoPadding: number
   style?: QrStyle
+  logoTransparentBackground?: boolean
 }
 
 export type GenerateQrPngResult = {
@@ -43,6 +44,7 @@ function drawCenteredLogo(
   sizePercent: number,
   logoPadding: number,
   backingColor: string,
+  transparentBackground: boolean,
 ) {
   const logoPx = resolution * (sizePercent / 100)
   const pad = logoPx * (logoPadding / 100)
@@ -50,8 +52,10 @@ function drawCenteredLogo(
   const boxX = (resolution - boxSize) / 2
   const boxY = (resolution - boxSize) / 2
 
-  ctx.fillStyle = backingColor
-  ctx.fillRect(boxX, boxY, boxSize, boxSize)
+  if (!transparentBackground) {
+    ctx.fillStyle = backingColor
+    ctx.fillRect(boxX, boxY, boxSize, boxSize)
+  }
 
   const scale = Math.min(logoPx / logo.width, logoPx / logo.height)
   const drawWidth = logo.width * scale
@@ -70,6 +74,7 @@ export async function generateQrPng({
   margin,
   logoPadding,
   style = DEFAULT_QR_STYLE,
+  logoTransparentBackground = false,
 }: GenerateQrPngOptions): Promise<GenerateQrPngResult> {
   const qr = QRCode.create(url, { errorCorrectionLevel: 'H' })
 
@@ -92,6 +97,7 @@ export async function generateQrPng({
       size,
       logoPadding,
       style.quietZoneColor,
+      logoTransparentBackground,
     )
   }
 

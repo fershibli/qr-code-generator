@@ -66,6 +66,7 @@ function App() {
         margin,
         logoPadding,
         style,
+        logoTransparentBackground,
       })
         .then((result) => {
           if (cancelled) {
@@ -101,7 +102,16 @@ function App() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [trimmedUrl, logoFile, size, resolution, margin, logoPadding, style])
+  }, [
+    trimmedUrl,
+    logoFile,
+    size,
+    resolution,
+    margin,
+    logoPadding,
+    style,
+    logoTransparentBackground,
+  ])
 
   return (
     <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
