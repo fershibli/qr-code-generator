@@ -1,0 +1,1 @@
+export { QrStyleForm } from './QrStyleForm'

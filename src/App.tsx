@@ -14,6 +14,7 @@ import {
   DEFAULT_RESOLUTION,
   type Resolution,
 } from './constants'
+import { createDefaultQrStyle, type QrStyle } from './qrStyle'
 import { generateQrPng } from './utils/generateQrPng'
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -33,6 +34,9 @@ function App() {
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
+  const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
+  const [logoTransparentBackground, setLogoTransparentBackground] =
+    useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
   const [loading, setLoading] = useState(false)
@@ -61,6 +65,7 @@ function App() {
         resolution,
         margin,
         logoPadding,
+        style,
       })
         .then((result) => {
           if (cancelled) {
@@ -96,7 +101,7 @@ function App() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [trimmedUrl, logoFile, size, resolution, margin, logoPadding])
+  }, [trimmedUrl, logoFile, size, resolution, margin, logoPadding, style])
 
   return (
     <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
@@ -142,11 +147,20 @@ function App() {
                 onMarginChange={setMargin}
                 resolution={resolution}
                 onResolutionChange={setResolution}
+                style={style}
+                onStyleChange={setStyle}
+                logoTransparentBackground={logoTransparentBackground}
+                onLogoTransparentBackgroundChange={setLogoTransparentBackground}
+                onStyleReset={() => {
+                  setStyle(createDefaultQrStyle())
+                  setLogoTransparentBackground(false)
+                }}
               />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <QrPreview
                 previewUrl={trimmedUrl ? previewUrl : null}
+                quietZoneColor={style.quietZoneColor}
                 resolution={resolution}
                 loading={Boolean(trimmedUrl) && loading}
                 error={trimmedUrl ? error : null}

@@ -11,6 +11,7 @@ import { PREVIEW_SIZE } from '../../constants'
 
 type QrPreviewProps = {
   previewUrl: string | null
+  quietZoneColor?: string
   resolution: number
   loading: boolean
   error: string | null
@@ -20,6 +21,7 @@ type QrPreviewProps = {
 
 export function QrPreview({
   previewUrl,
+  quietZoneColor = '#ffffff',
   resolution,
   loading,
   error,
@@ -45,7 +47,7 @@ export function QrPreview({
             border: '1px solid',
             borderColor: 'divider',
             borderRadius: 1,
-            bgcolor: '#ffffff',
+            bgcolor: quietZoneColor,
             overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
