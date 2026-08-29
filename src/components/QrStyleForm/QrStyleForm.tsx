@@ -2,26 +2,40 @@ import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import Slider from '@mui/material/Slider'
 import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
 import {
+  DEFAULT_CONTOUR_WIDTH,
   DEFAULT_PATTERN_SCALE,
+  MAX_CONTOUR_WIDTH,
   MAX_PATTERN_SCALE,
+  MIN_CONTOUR_WIDTH,
   MIN_PATTERN_SCALE,
 } from '../../constants'
-import type { QrModuleShape, QrStyle } from '../../qrStyle'
+import type { QrContourShape, QrModuleShape, QrStyle } from '../../qrStyle'
 
-const SHAPE_OPTIONS: Array<{ value: QrModuleShape; label: string }> = [
+type ShapeOption<T extends string> = { value: T; label: string }
+
+const SHAPE_OPTIONS: Array<ShapeOption<QrModuleShape>> = [
   { value: 'square', label: 'Square' },
   { value: 'rounded', label: 'Rounded' },
   { value: 'circle', label: 'Circle' },
   { value: 'triangle', label: 'Triangle' },
+]
+
+const CONTOUR_SHAPE_OPTIONS: Array<ShapeOption<QrContourShape>> = [
+  { value: 'circle', label: 'Circle' },
+  { value: 'square', label: 'Square' },
+  { value: 'rounded', label: 'Rounded' },
+  { value: 'diamond', label: 'Diamond' },
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
@@ -83,13 +97,19 @@ function ColorField({ label, value, onChange }: ColorFieldProps) {
   )
 }
 
-type ShapeSelectProps = {
+type ShapeSelectProps<T extends string> = {
   label: string
-  value: QrModuleShape
-  onChange: (value: QrModuleShape) => void
+  value: T
+  options: Array<ShapeOption<T>>
+  onChange: (value: T) => void
 }
 
-function ShapeSelect({ label, value, onChange }: ShapeSelectProps) {
+function ShapeSelect<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: ShapeSelectProps<T>) {
   const labelId = `${label.replace(/\s+/g, '-').toLowerCase()}-label`
 
   return (
@@ -99,9 +119,9 @@ function ShapeSelect({ label, value, onChange }: ShapeSelectProps) {
         labelId={labelId}
         label={label}
         value={value}
-        onChange={(event) => onChange(event.target.value as QrModuleShape)}
+        onChange={(event) => onChange(event.target.value as T)}
       >
-        {SHAPE_OPTIONS.map((option) => (
+        {options.map((option) => (
           <MenuItem key={option.value} value={option.value}>
             {option.label}
           </MenuItem>
@@ -213,6 +233,7 @@ export function QrStyleForm({
           />
           <ShapeSelect
             label="Position outer shape"
+            options={SHAPE_OPTIONS}
             value={style.finder.outerShape}
             onChange={(outerShape) =>
               onStyleChange({
@@ -223,6 +244,7 @@ export function QrStyleForm({
           />
           <ShapeSelect
             label="Position center shape"
+            options={SHAPE_OPTIONS}
             value={style.finder.centerShape}
             onChange={(centerShape) =>
               onStyleChange({
@@ -280,6 +302,7 @@ export function QrStyleForm({
           />
           <ShapeSelect
             label="Alignment shape"
+            options={SHAPE_OPTIONS}
             value={style.alignment.shape}
             onChange={(shape) =>
               onStyleChange({
@@ -321,6 +344,7 @@ export function QrStyleForm({
           />
           <ShapeSelect
             label="Timing shape"
+            options={SHAPE_OPTIONS}
             value={style.timing.shape}
             onChange={(shape) =>
               onStyleChange({
@@ -330,6 +354,104 @@ export function QrStyleForm({
             }
           />
         </Box>
+      </Stack>
+
+      <Stack spacing={1.5}>
+        <Box>
+          <Typography variant="subtitle1">Contour</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Fills the space around the code with copies of its own pixels, with
+            no position or alignment marks, clipped to the chosen outline. The
+            code keeps a four-module quiet zone and shrinks to make room.
+          </Typography>
+        </Box>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={style.contour.enabled}
+              onChange={(event) =>
+                onStyleChange({
+                  ...style,
+                  contour: { ...style.contour, enabled: event.target.checked },
+                })
+              }
+            />
+          }
+          label="Fill a contour around the code"
+        />
+        {style.contour.enabled ? (
+          <>
+            <Box sx={fieldGridSx}>
+              <ShapeSelect
+                label="Contour shape"
+                options={CONTOUR_SHAPE_OPTIONS}
+                value={style.contour.shape}
+                onChange={(shape) =>
+                  onStyleChange({
+                    ...style,
+                    contour: { ...style.contour, shape },
+                  })
+                }
+              />
+              <ShapeSelect
+                label="Contour module shape"
+                options={SHAPE_OPTIONS}
+                value={style.contour.moduleShape}
+                onChange={(moduleShape) =>
+                  onStyleChange({
+                    ...style,
+                    contour: { ...style.contour, moduleShape },
+                  })
+                }
+              />
+              <ColorField
+                label="Contour color"
+                value={style.contour.color}
+                onChange={(color) =>
+                  onStyleChange({
+                    ...style,
+                    contour: { ...style.contour, color },
+                  })
+                }
+              />
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" component="p" gutterBottom>
+                Contour width ({style.contour.width} modules)
+              </Typography>
+              <Slider
+                value={style.contour.width}
+                min={MIN_CONTOUR_WIDTH}
+                max={MAX_CONTOUR_WIDTH}
+                step={1}
+                size="small"
+                valueLabelDisplay="auto"
+                aria-label="Contour width"
+                onChange={(_event, next) =>
+                  onStyleChange({
+                    ...style,
+                    contour: {
+                      ...style.contour,
+                      width: Array.isArray(next) ? next[0] : next,
+                    },
+                  })
+                }
+                marks={[
+                  { value: MIN_CONTOUR_WIDTH, label: `${MIN_CONTOUR_WIDTH}` },
+                  {
+                    value: DEFAULT_CONTOUR_WIDTH,
+                    label: `${DEFAULT_CONTOUR_WIDTH}`,
+                  },
+                  { value: MAX_CONTOUR_WIDTH, label: `${MAX_CONTOUR_WIDTH}` },
+                ]}
+              />
+              <Typography variant="caption" color="text.secondary">
+                A wide contour is needed for a round outline to enclose the
+                whole code.
+              </Typography>
+            </Box>
+          </>
+        ) : null}
       </Stack>
 
       <Box>

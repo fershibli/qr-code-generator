@@ -75,6 +75,67 @@ describe('QrStyleForm', () => {
     ).toBeInTheDocument()
   })
 
+  it('hides the contour controls until the switch is on', async () => {
+    const user = userEvent.setup()
+    const { props } = renderStyle()
+    expect(
+      screen.queryByRole('combobox', { name: 'Contour shape' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('switch', { name: 'Fill a contour around the code' }),
+    )
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ enabled: true }),
+      }),
+    )
+  })
+
+  it('edits the contour outline, module shape, color, and width', async () => {
+    const user = userEvent.setup()
+    const style = createDefaultQrStyle()
+    style.contour = { ...style.contour, enabled: true }
+    const { props } = renderStyle({ style })
+
+    expect(screen.getByText('Contour width (6 modules)')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('combobox', { name: 'Contour shape' }))
+    await user.click(await screen.findByRole('option', { name: 'Diamond' }))
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ shape: 'diamond' }),
+      }),
+    )
+
+    await user.click(
+      screen.getByRole('combobox', { name: 'Contour module shape' }),
+    )
+    await user.click(await screen.findByRole('option', { name: 'Circle' }))
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ moduleShape: 'circle' }),
+      }),
+    )
+
+    fireEvent.change(screen.getByLabelText('Contour color'), {
+      target: { value: '#6a0dad' },
+    })
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ color: '#6a0dad' }),
+      }),
+    )
+
+    screen.getByRole('slider', { name: 'Contour width' }).focus()
+    await user.keyboard('{ArrowRight}')
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ width: 7 }),
+      }),
+    )
+  })
+
   it('resets style to the defaults', async () => {
     const user = userEvent.setup()
     const { props } = renderStyle()
