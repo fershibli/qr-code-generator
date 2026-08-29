@@ -387,7 +387,10 @@ export function QrStyleForm({
                 options={CONTOUR_SHAPE_OPTIONS}
                 value={style.contour.shape}
                 onChange={(shape) =>
-                  onStyleChange({ ...style, contour: { ...style.contour, shape } })
+                  onStyleChange({
+                    ...style,
+                    contour: { ...style.contour, shape },
+                  })
                 }
               />
               <ShapeSelect
@@ -405,7 +408,10 @@ export function QrStyleForm({
                 label="Contour color"
                 value={style.contour.color}
                 onChange={(color) =>
-                  onStyleChange({ ...style, contour: { ...style.contour, color } })
+                  onStyleChange({
+                    ...style,
+                    contour: { ...style.contour, color },
+                  })
                 }
               />
             </Box>
