@@ -6,7 +6,15 @@ const REPO_URL = 'https://github.com/fershibli/qr-code-generator'
 
 export function AppFooter() {
   return (
-    <Stack spacing={0.5} sx={{ alignItems: 'center', pt: 2 }}>
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      spacing={{ xs: 0.5, md: 1.5 }}
+      sx={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        pt: { xs: 1.5, md: 0.5 },
+      }}
+    >
       <Typography variant="caption" color="text.secondary">
         v{__APP_VERSION__}
       </Typography>

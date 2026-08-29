@@ -1,10 +1,54 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { act } from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { QrPreview } from './QrPreview'
 
+let observerCallback: IntersectionObserverCallback | null = null
+
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root = null
+  readonly rootMargin = ''
+  readonly scrollMargin = ''
+  readonly thresholds = [0]
+
+  constructor(callback: IntersectionObserverCallback) {
+    observerCallback = callback
+  }
+
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return []
+  }
+}
+
+function emitIntersecting(isIntersecting: boolean) {
+  act(() => {
+    observerCallback?.(
+      [
+        {
+          isIntersecting,
+          intersectionRatio: isIntersecting ? 1 : 0,
+        } as IntersectionObserverEntry,
+      ],
+      {} as IntersectionObserver,
+    )
+  })
+}
+
 describe('QrPreview', () => {
+  beforeEach(() => {
+    observerCallback = null
+    vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('shows an empty state and a disabled download button', () => {
     renderWithTheme(
       <QrPreview
@@ -18,6 +62,9 @@ describe('QrPreview', () => {
     )
     expect(
       screen.getByText('Enter a URL to generate a QR code.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText('The preview will appear here.'),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Download' })).toBeDisabled()
     expect(screen.queryByText('500x500px')).not.toBeInTheDocument()
@@ -59,5 +106,32 @@ describe('QrPreview', () => {
     expect(screen.getByText('Failed to generate QR code')).toBeInTheDocument()
     expect(screen.getByRole('progressbar')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Download' })).toBeDisabled()
+  })
+
+  it('shows a compact top bar when the original card leaves the viewport', async () => {
+    const onDownload = vi.fn()
+    const user = userEvent.setup()
+    renderWithTheme(
+      <QrPreview
+        previewUrl="blob:preview"
+        resolution={500}
+        loading={false}
+        error={null}
+        disabled={false}
+        onDownload={onDownload}
+      />,
+    )
+
+    expect(screen.queryByRole('complementary', { name: 'Compact preview' })).not.toBeInTheDocument()
+
+    emitIntersecting(false)
+
+    const dock = screen.getByRole('complementary', { name: 'Compact preview' })
+    expect(dock).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Download' }))
+    expect(onDownload).toHaveBeenCalledTimes(1)
+
+    emitIntersecting(true)
+    expect(screen.queryByRole('complementary', { name: 'Compact preview' })).not.toBeInTheDocument()
   })
 })
