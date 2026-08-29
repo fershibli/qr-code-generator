@@ -64,12 +64,13 @@ function drawCenteredLogo(
   ctx: CanvasRenderingContext2D,
   logo: HTMLImageElement,
   resolution: number,
+  qrSize: number,
   sizePercent: number,
   logoPadding: number,
   backingColor: string,
   transparentBackground: boolean,
 ) {
-  const logoPx = resolution * (sizePercent / 100)
+  const logoPx = qrSize * (sizePercent / 100)
   const pad = logoPx * (logoPadding / 100)
   const boxSize = logoPx + pad * 2
   const boxX = (resolution - boxSize) / 2
@@ -110,7 +111,7 @@ export async function generateQrPng({
     throw new Error('Could not get canvas context')
   }
 
-  drawStyledQr(ctx, qr.modules, { resolution, margin, style })
+  const core = drawStyledQr(ctx, qr.modules, { resolution, margin, style })
 
   if (logoFile) {
     const logo = await loadImage(logoFile)
@@ -118,6 +119,7 @@ export async function generateQrPng({
       ctx,
       logo,
       resolution,
+      core.size,
       size,
       logoPadding,
       style.quietZoneColor,

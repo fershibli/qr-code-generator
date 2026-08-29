@@ -1,7 +1,4 @@
-import {
-  DEFAULT_CONTOUR_THICKNESS,
-  DEFAULT_PATTERN_SCALE,
-} from './constants'
+import { DEFAULT_CONTOUR_WIDTH, DEFAULT_PATTERN_SCALE } from './constants'
 
 export type QrModuleShape = 'square' | 'rounded' | 'circle' | 'triangle'
 
@@ -35,8 +32,8 @@ export type QrStyle = {
     shape: QrContourShape
     color: string
     moduleShape: QrModuleShape
-    /** Width of the decorated band, as a percentage of the canvas per side. */
-    thickness: number
+    /** Width of the decorated band around the code, in modules. */
+    width: number
   }
 }
 
@@ -66,7 +63,7 @@ export function createDefaultQrStyle(): QrStyle {
       shape: 'circle',
       color: '#000000',
       moduleShape: 'square',
-      thickness: DEFAULT_CONTOUR_THICKNESS,
+      width: DEFAULT_CONTOUR_WIDTH,
     },
   }
 }
