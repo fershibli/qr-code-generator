@@ -1,4 +1,10 @@
 import QRCode from 'qrcode'
+import {
+  DEFAULT_MIN_QR_VERSION,
+  clampQrVersion,
+  modulesForVersion,
+  versionForModules,
+} from '../constants'
 import { DEFAULT_QR_STYLE, type QrStyle } from '../qrStyle'
 import { canvasToRgbPngBlob } from './encodeRgbPng'
 import { drawStyledQr } from './drawStyledQr'
@@ -12,6 +18,8 @@ export type GenerateQrPngOptions = {
   logoPadding: number
   style?: QrStyle
   logoTransparentBackground?: boolean
+  /** Lowest QR version to encode with; higher versions pack more modules. */
+  minVersion?: number
 }
 
 export type GenerateQrPngResult = {
@@ -19,6 +27,21 @@ export type GenerateQrPngResult = {
   objectUrl: string
   width: number
   height: number
+  version: number
+  moduleCount: number
+}
+
+/**
+ * Encodes `url` at the smallest version that fits it, then re-encodes at
+ * `minVersion` when the user asked for a denser (more pixelated) code. The
+ * automatic version always wins when the payload needs more room, so a long
+ * URL never fails because of this setting.
+ */
+function createMatrix(url: string, minVersion: number) {
+  const automatic = QRCode.create(url, { errorCorrectionLevel: 'H' })
+  const version = clampQrVersion(minVersion)
+  if (automatic.modules.size >= modulesForVersion(version)) return automatic
+  return QRCode.create(url, { errorCorrectionLevel: 'H', version })
 }
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -75,8 +98,9 @@ export async function generateQrPng({
   logoPadding,
   style = DEFAULT_QR_STYLE,
   logoTransparentBackground = false,
+  minVersion = DEFAULT_MIN_QR_VERSION,
 }: GenerateQrPngOptions): Promise<GenerateQrPngResult> {
-  const qr = QRCode.create(url, { errorCorrectionLevel: 'H' })
+  const qr = createMatrix(url, minVersion)
 
   const canvas = document.createElement('canvas')
   canvas.width = resolution
@@ -107,5 +131,7 @@ export async function generateQrPng({
     objectUrl: URL.createObjectURL(blob),
     width: resolution,
     height: resolution,
+    version: versionForModules(qr.modules.size),
+    moduleCount: qr.modules.size,
   }
 }

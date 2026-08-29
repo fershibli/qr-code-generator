@@ -11,6 +11,8 @@ vi.mock('./utils/generateQrPng', () => ({
     objectUrl: 'blob:qr-preview',
     width: 500,
     height: 500,
+    version: 3,
+    moduleCount: 29,
   })),
 }))
 
@@ -25,6 +27,8 @@ describe('App', () => {
       objectUrl: 'blob:qr-preview',
       width: 500,
       height: 500,
+      version: 3,
+      moduleCount: 29,
     })
   })
 
@@ -121,6 +125,8 @@ describe('App', () => {
       objectUrl: 'blob:stale',
       width: 500,
       height: 500,
+      version: 3,
+      moduleCount: 29,
     }
     let resolveFirst: ((value: typeof result) => void) | undefined
     vi.mocked(generateQrPng)
