@@ -2,17 +2,12 @@ import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Collapse from '@mui/material/Collapse'
-import FormControl from '@mui/material/FormControl'
+import Divider from '@mui/material/Divider'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import InputLabel from '@mui/material/InputLabel'
-import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
-import Select from '@mui/material/Select'
-import Slider from '@mui/material/Slider'
 import Stack from '@mui/material/Stack'
 import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
-import Typography from '@mui/material/Typography'
 import { useState } from 'react'
 import {
   DEFAULT_LOGO_SIZE,
@@ -31,8 +26,14 @@ import {
   type Resolution,
 } from '../../constants'
 import type { QrStyle } from '../../qrStyle'
+import { FormSection, SelectField, SliderField } from '../FormFields'
 import { LogoUpload } from '../LogoUpload'
 import { QrStyleForm } from '../QrStyleForm'
+
+const RESOLUTION_OPTIONS = RESOLUTIONS.map((value) => ({
+  value,
+  label: `${value}×${value} px`,
+}))
 
 type QrFormProps = {
   url: string
@@ -110,188 +111,149 @@ export function QrForm({
           },
         }}
       >
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h6">Details</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Enter a destination URL and optionally add a centered logo.
-          </Typography>
-        </Box>
-
-        <TextField
-          label="URL"
-          required
-          fullWidth
-          value={url}
-          onChange={(event) => onUrlChange(event.target.value)}
-          placeholder="https://example.com"
-          helperText="Include https:// so scanners open the link."
-        />
-
-        <LogoUpload
-          file={logoFile}
-          previewUrl={logoPreviewUrl}
-          onChange={onLogoChange}
-        />
-
-        {logoFile ? (
-          <>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={logoTransparentBackground}
-                  onChange={(event) =>
-                    onLogoTransparentBackgroundChange(event.target.checked)
-                  }
-                />
-              }
-              label="Transparent logo background"
-            />
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Logo size ({size}%)
-              </Typography>
-              <Slider
-                value={size}
-                min={MIN_LOGO_SIZE}
-                max={MAX_LOGO_SIZE}
-                step={1}
-                valueLabelDisplay="auto"
-                valueLabelFormat={(value) => `${value}%`}
-                onChange={(_event, value) => {
-                  onSizeChange(Array.isArray(value) ? value[0] : value)
-                }}
-                marks={[
-                  { value: MIN_LOGO_SIZE, label: `${MIN_LOGO_SIZE}%` },
-                  { value: DEFAULT_LOGO_SIZE, label: `${DEFAULT_LOGO_SIZE}%` },
-                  { value: MAX_LOGO_SIZE, label: `${MAX_LOGO_SIZE}%` },
-                ]}
-              />
-              <Typography variant="caption" color="text.secondary">
-                Percentage of the QR code width and height.
-              </Typography>
-            </Box>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Logo padding ({logoPadding}%)
-              </Typography>
-              <Slider
-                value={logoPadding}
-                min={MIN_LOGO_PADDING}
-                max={MAX_LOGO_PADDING}
-                step={1}
-                valueLabelDisplay="auto"
-                valueLabelFormat={(value) => `${value}%`}
-                onChange={(_event, value) => {
-                  onLogoPaddingChange(Array.isArray(value) ? value[0] : value)
-                }}
-                marks={[
-                  { value: MIN_LOGO_PADDING, label: `${MIN_LOGO_PADDING}%` },
-                  {
-                    value: DEFAULT_LOGO_PADDING,
-                    label: `${DEFAULT_LOGO_PADDING}%`,
-                  },
-                  { value: MAX_LOGO_PADDING, label: `${MAX_LOGO_PADDING}%` },
-                ]}
-              />
-              <Typography variant="caption" color="text.secondary">
-                Space around the logo, as a percentage of logo size.
-              </Typography>
-            </Box>
-          </>
-        ) : null}
-
-        <Box>
-          <Typography variant="subtitle2" gutterBottom>
-            QR margin ({margin} modules)
-          </Typography>
-          <Slider
-            value={margin}
-            min={MIN_QR_MARGIN}
-            max={MAX_QR_MARGIN}
-            step={1}
-            valueLabelDisplay="auto"
-            onChange={(_event, value) => {
-              onMarginChange(Array.isArray(value) ? value[0] : value)
-            }}
-            marks={[
-              { value: MIN_QR_MARGIN, label: `${MIN_QR_MARGIN}` },
-              { value: DEFAULT_QR_MARGIN, label: `${DEFAULT_QR_MARGIN}` },
-              { value: MAX_QR_MARGIN, label: `${MAX_QR_MARGIN}` },
-            ]}
-          />
-          <Typography variant="caption" color="text.secondary">
-            Quiet zone around the QR code, in modules.
-          </Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2" gutterBottom>
-            Module density ({densityLabel})
-          </Typography>
-          <Slider
-            value={minVersion}
-            min={MIN_QR_VERSION}
-            max={MAX_QR_VERSION}
-            step={1}
-            valueLabelDisplay="auto"
-            valueLabelFormat={(value) =>
-              value > MIN_QR_VERSION ? `v${value}` : 'auto'
-            }
-            onChange={(_event, value) => {
-              onMinVersionChange(Array.isArray(value) ? value[0] : value)
-            }}
-            marks={[
-              { value: MIN_QR_VERSION, label: 'Auto' },
-              { value: 10, label: '10' },
-              { value: 20, label: '20' },
-              { value: 30, label: '30' },
-              { value: MAX_QR_VERSION, label: `${MAX_QR_VERSION}` },
-            ]}
-          />
-          <Typography variant="caption" color="text.secondary">
-            Smallest QR version to encode with. Higher versions pack more,
-            smaller squares; the version rises on its own when the URL needs
-            more room.
-          </Typography>
-        </Box>
-
-        <FormControl fullWidth>
-          <InputLabel id="resolution-label">Resolution</InputLabel>
-          <Select
-            labelId="resolution-label"
-            label="Resolution"
-            value={resolution}
-            onChange={(event) => {
-              onResolutionChange(event.target.value as Resolution)
-            }}
+        <Stack spacing={3} divider={<Divider flexItem />}>
+          <FormSection
+            title="Destination"
+            description="Where the code sends whoever scans it."
           >
-            {RESOLUTIONS.map((value) => (
-              <MenuItem key={value} value={value}>
-                {value}×{value} px
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            <TextField
+              label="URL"
+              required
+              fullWidth
+              value={url}
+              onChange={(event) => onUrlChange(event.target.value)}
+              placeholder="https://example.com"
+              helperText="Include https:// so scanners open the link."
+            />
+          </FormSection>
 
-        <Button
-          variant="outlined"
-          fullWidth
-          startIcon={<PaletteOutlinedIcon />}
-          onClick={() => setStyleOpen((open) => !open)}
-          aria-expanded={styleOpen}
-        >
-          Customize style
-        </Button>
+          <FormSection
+            title="Logo"
+            description="Optional image composited in the center of the code."
+          >
+            <LogoUpload
+              file={logoFile}
+              previewUrl={logoPreviewUrl}
+              onChange={onLogoChange}
+            />
 
-        <Collapse in={styleOpen} unmountOnExit>
-          <QrStyleForm
-            style={style}
-            onStyleChange={onStyleChange}
-            onReset={onStyleReset}
-          />
-        </Collapse>
-      </Stack>
+            {logoFile ? (
+              <>
+                <FormControlLabel
+                  sx={{ mr: 0 }}
+                  control={
+                    <Switch
+                      checked={logoTransparentBackground}
+                      onChange={(event) =>
+                        onLogoTransparentBackgroundChange(event.target.checked)
+                      }
+                    />
+                  }
+                  label="Transparent logo background"
+                />
+                <SliderField
+                  label="Logo size"
+                  valueLabel={`${size}%`}
+                  value={size}
+                  min={MIN_LOGO_SIZE}
+                  max={MAX_LOGO_SIZE}
+                  marks={[
+                    { value: MIN_LOGO_SIZE, label: `${MIN_LOGO_SIZE}%` },
+                    { value: DEFAULT_LOGO_SIZE, label: `${DEFAULT_LOGO_SIZE}%` },
+                    { value: MAX_LOGO_SIZE, label: `${MAX_LOGO_SIZE}%` },
+                  ]}
+                  formatValueLabel={(value) => `${value}%`}
+                  helperText="Percentage of the QR code width and height."
+                  onChange={onSizeChange}
+                />
+                <SliderField
+                  label="Logo padding"
+                  valueLabel={`${logoPadding}%`}
+                  value={logoPadding}
+                  min={MIN_LOGO_PADDING}
+                  max={MAX_LOGO_PADDING}
+                  marks={[
+                    { value: MIN_LOGO_PADDING, label: `${MIN_LOGO_PADDING}%` },
+                    {
+                      value: DEFAULT_LOGO_PADDING,
+                      label: `${DEFAULT_LOGO_PADDING}%`,
+                    },
+                    { value: MAX_LOGO_PADDING, label: `${MAX_LOGO_PADDING}%` },
+                  ]}
+                  formatValueLabel={(value) => `${value}%`}
+                  helperText="Space around the logo, as a percentage of logo size."
+                  onChange={onLogoPaddingChange}
+                />
+              </>
+            ) : null}
+          </FormSection>
+
+          <FormSection
+            title="Output"
+            description="Matrix size and the resolution of the exported PNG."
+          >
+            <SliderField
+              label="QR margin"
+              valueLabel={`${margin} modules`}
+              value={margin}
+              min={MIN_QR_MARGIN}
+              max={MAX_QR_MARGIN}
+              marks={[
+                { value: MIN_QR_MARGIN, label: `${MIN_QR_MARGIN}` },
+                { value: DEFAULT_QR_MARGIN, label: `${DEFAULT_QR_MARGIN}` },
+                { value: MAX_QR_MARGIN, label: `${MAX_QR_MARGIN}` },
+              ]}
+              helperText="Quiet zone around the QR code, in modules."
+              onChange={onMarginChange}
+            />
+            <SliderField
+              label="Module density"
+              valueLabel={densityLabel}
+              value={minVersion}
+              min={MIN_QR_VERSION}
+              max={MAX_QR_VERSION}
+              marks={[
+                { value: MIN_QR_VERSION, label: 'Auto' },
+                { value: 10, label: '10' },
+                { value: 20, label: '20' },
+                { value: 30, label: '30' },
+                { value: MAX_QR_VERSION, label: `${MAX_QR_VERSION}` },
+              ]}
+              formatValueLabel={(value) =>
+                value > MIN_QR_VERSION ? `v${value}` : 'auto'
+              }
+              helperText="Smallest QR version to encode with. Higher versions pack more, smaller squares; the version rises on its own when the URL needs more room."
+              onChange={onMinVersionChange}
+            />
+            <SelectField
+              label="Resolution"
+              value={resolution}
+              options={RESOLUTION_OPTIONS}
+              onChange={(value) => onResolutionChange(value as Resolution)}
+            />
+          </FormSection>
+
+          <Box>
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<PaletteOutlinedIcon />}
+              onClick={() => setStyleOpen((open) => !open)}
+              aria-expanded={styleOpen}
+            >
+              Customize style
+            </Button>
+            <Collapse in={styleOpen} unmountOnExit>
+              <Box sx={{ pt: 3 }}>
+                <QrStyleForm
+                  style={style}
+                  onStyleChange={onStyleChange}
+                  onReset={onStyleReset}
+                />
+              </Box>
+            </Collapse>
+          </Box>
+        </Stack>
       </Box>
     </Paper>
   )
