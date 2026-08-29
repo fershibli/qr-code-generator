@@ -8,6 +8,7 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 
 - [Features](#features)
 - [How to use](#how-to-use)
+- [Scannability](#scannability)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Development](#development)
@@ -66,7 +67,7 @@ Under **Customize style**, **Position pattern size** and **Alignment pattern siz
 
 ![Position patterns at 130% with a warning that scanners may not read the code](docs/screenshots/mark-size.png)
 
-Resizing the position marks is the one setting here that breaks scanning, so the form warns as soon as it leaves 100%.
+Resizing the position marks is the one setting here that breaks scanning — see [Scannability](#scannability) — so the form warns as soon as it leaves 100%.
 
 ### 5. Wrap the code in a contour
 
@@ -93,6 +94,22 @@ Click **Download** to save `qr-code-{n}x{n}.png`. Removing the current logo does
 Use the sun/moon switch in the header. The choice is stored in `localStorage` (`color-mode`). The QR preview frame uses the quiet-zone color so it matches the exported PNG.
 
 ![The same generator in dark mode](docs/screenshots/dark-mode.png)
+
+## Scannability
+
+Every option here was checked by generating the PNG in the running app (Playwright) and decoding it with [`jsQR`](https://github.com/cozmo/jsQR), not just by looking at it.
+
+| Setting | Still decodes |
+| --- | --- |
+| Baseline, no styling | ✅ |
+| Module density, up to version 40 | ✅ |
+| Contour fill, any outline or width | ✅ |
+| Alignment pattern size, 60–140% | ✅ |
+| Position pattern size, anything but 100% | ❌ at every step from 60% to 140% |
+
+Scanners derive the module size from the three position patterns, so a mark drawn larger or smaller than its 7×7 box makes the decoder sample the grid at the wrong pitch. The control is still there — other generators offer it too — but the style form shows a warning while it is off 100%, and codes made that way should be tested on a real scanner before being published.
+
+The contour fill is safe because it never repeats a function pattern and never comes closer than four modules to the code.
 
 ## Architecture
 
