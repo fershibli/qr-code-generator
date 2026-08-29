@@ -18,8 +18,9 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 
 - Encode any URL into a square PNG QR code (no alpha channel).
 - Optional centered logo, with size and padding sliders that appear only after a logo is selected.
-- Collapsible **Customize style** controls for quiet-zone, data, finder, alignment, and timing colors and shapes.
-- Optional transparent logo backing so QR modules show through around the logo (the PNG stays opaque RGB).
+- Collapsible **Customize style** controls for quiet-zone, data, finder, alignment, and timing colors and shapes. Finder and alignment shapes apply to the whole pattern (square, rounded, circle, or triangle), not each module.
+- On desktop the form scrolls inside the left card so the preview stays in view. On mobile the preview sits above the form; a compact 20vh bar (QR + Download) appears only while that card is scrolled out of view.
+- Optional transparent logo backing so QR modules show through around the logo (the PNG stays opaque RGB). The switch is on the form, below the logo upload, and only appears after a logo is selected.
 - Adjustable quiet-zone margin (0–10 modules).
 - Export resolution from 250×250 through 1750×1750 px, in 250 px steps.
 - Live preview always shown at 500×500 CSS pixels; download uses the selected resolution.
@@ -45,11 +46,11 @@ Type a full URL including `https://` so scanners open the link. The preview upda
 
 - **QR margin** is the quiet zone around the code, in modules (default 2).
 - **Resolution** is the exported PNG size. The preview stays 500×500 px; the caption under **Download** shows the file size, such as `500x500px`.
-- **Customize style** expands a Style section on the same card: quiet-zone and data colors, finder/alignment/timing colors and shapes (square, rounded, or circle), and **Reset to default**.
+- **Customize style** expands a Style section on the same card: quiet-zone and data colors, finder/alignment/timing colors and shapes (square, rounded, circle, or triangle), and **Reset to default**. Finder and alignment use one shape for the whole mark.
 
 ### 3. Optionally add a logo
 
-**Upload logo** accepts an image. Logo size (10–40%) and logo padding (0–25%) appear only when a file is selected. Recent logos stay under the upload control for reuse. With a logo selected, **Transparent logo background** in the Style section skips the opaque rectangle behind the logo so modules (and the logo’s own pixels) show through.
+**Upload logo** accepts an image. Logo size (10–40%), logo padding (0–25%), and **Transparent logo background** appear only when a file is selected. Recent logos stay under the upload control for reuse. Transparent backing skips the opaque rectangle behind the logo so modules (and the logo’s own pixels) show through.
 
 ![QR code with a centered logo, size and padding sliders, and recent logos](docs/screenshots/with-logo.png)
 
