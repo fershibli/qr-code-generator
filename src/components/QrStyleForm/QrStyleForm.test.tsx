@@ -25,6 +25,56 @@ describe('QrStyleForm', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('resizes the position and alignment marks', async () => {
+    const user = userEvent.setup()
+    const { props } = renderStyle()
+
+    screen.getByRole('slider', { name: 'Position pattern size' }).focus()
+    await user.keyboard('{ArrowRight}')
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        finder: expect.objectContaining({ scale: 105 }),
+      }),
+    )
+
+    screen.getByRole('slider', { name: 'Alignment pattern size' }).focus()
+    await user.keyboard('{ArrowLeft}')
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        alignment: expect.objectContaining({ scale: 95 }),
+      }),
+    )
+  })
+
+  it('warns only while the position marks are resized', () => {
+    const { unmount } = renderStyle()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    unmount()
+
+    renderStyle({
+      style: {
+        ...createDefaultQrStyle(),
+        finder: { ...createDefaultQrStyle().finder, scale: 115 },
+      },
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /size other than 100% usually stops the code from being read/,
+    )
+  })
+
+  it('shows the current mark sizes', () => {
+    renderStyle({
+      style: {
+        ...createDefaultQrStyle(),
+        finder: { ...createDefaultQrStyle().finder, scale: 130 },
+      },
+    })
+    expect(screen.getByText('Position pattern size (130%)')).toBeInTheDocument()
+    expect(
+      screen.getByText('Alignment pattern size (100%)'),
+    ).toBeInTheDocument()
+  })
+
   it('resets style to the defaults', async () => {
     const user = userEvent.setup()
     const { props } = renderStyle()

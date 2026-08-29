@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { modulesForVersion } from '../constants'
 import { generateQrPng } from './generateQrPng'
+
+const { create } = vi.hoisted(() => ({ create: vi.fn() }))
 
 function mockModules(size = 21) {
   return {
@@ -14,17 +17,23 @@ function mockModules(size = 21) {
   }
 }
 
-vi.mock('qrcode', () => ({
-  default: {
-    create: vi.fn(() => ({
-      modules: mockModules(),
-    })),
-  },
-}))
+vi.mock('qrcode', () => ({ default: { create } }))
+
+/** Mirrors the library: the requested version wins, otherwise version 1. */
+function autoVersionOf(size: number) {
+  return (options?: { version?: number }) => ({
+    modules: mockModules(
+      options?.version ? modulesForVersion(options.version) : size,
+    ),
+  })
+}
 
 describe('generateQrPng', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    create.mockImplementation((_url: string, options?: { version?: number }) =>
+      autoVersionOf(21)(options),
+    )
   })
 
   it('returns a blob and object URL at the requested resolution', async () => {
@@ -39,6 +48,69 @@ describe('generateQrPng', () => {
     expect(result.height).toBe(250)
     expect(result.blob.type).toBe('image/png')
     expect(result.objectUrl).toMatch(/^blob:/)
+    expect(result.version).toBe(1)
+    expect(result.moduleCount).toBe(21)
+  })
+
+  it('keeps the automatic version when it already fits the density', async () => {
+    const result = await generateQrPng({
+      url: 'https://example.com',
+      size: 20,
+      resolution: 250,
+      margin: 2,
+      logoPadding: 5,
+      minVersion: 1,
+    })
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(result.version).toBe(1)
+  })
+
+  it('re-encodes at the requested version for a denser matrix', async () => {
+    const result = await generateQrPng({
+      url: 'https://example.com',
+      size: 20,
+      resolution: 250,
+      margin: 2,
+      logoPadding: 5,
+      minVersion: 10,
+    })
+    expect(create).toHaveBeenLastCalledWith('https://example.com', {
+      errorCorrectionLevel: 'H',
+      version: 10,
+    })
+    expect(result.version).toBe(10)
+    expect(result.moduleCount).toBe(57)
+  })
+
+  it('clamps a requested version to the supported range', async () => {
+    await generateQrPng({
+      url: 'https://example.com',
+      size: 20,
+      resolution: 250,
+      margin: 2,
+      logoPadding: 5,
+      minVersion: 99,
+    })
+    expect(create).toHaveBeenLastCalledWith('https://example.com', {
+      errorCorrectionLevel: 'H',
+      version: 40,
+    })
+  })
+
+  it('keeps the automatic version when the payload needs more room', async () => {
+    create.mockImplementation((_url: string, options?: { version?: number }) =>
+      autoVersionOf(modulesForVersion(12))(options),
+    )
+    const result = await generateQrPng({
+      url: 'https://example.com/a-long-payload',
+      size: 20,
+      resolution: 250,
+      margin: 2,
+      logoPadding: 5,
+      minVersion: 5,
+    })
+    expect(create).toHaveBeenCalledTimes(1)
+    expect(result.version).toBe(12)
   })
 
   it('draws a centered logo when a file is provided', async () => {

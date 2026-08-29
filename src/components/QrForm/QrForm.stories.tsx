@@ -3,6 +3,7 @@ import { useState } from 'react'
 import {
   DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
+  DEFAULT_MIN_QR_VERSION,
   DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
   type Resolution,
@@ -21,7 +22,13 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
+function StatefulQrForm({
+  withLogo = false,
+  initialMinVersion = DEFAULT_MIN_QR_VERSION,
+}: {
+  withLogo?: boolean
+  initialMinVersion?: number
+}) {
   const [url, setUrl] = useState(withLogo ? 'https://example.com' : '')
   const [logoFile, setLogoFile] = useState<File | null>(
     withLogo
@@ -36,6 +43,7 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
+  const [minVersion, setMinVersion] = useState(initialMinVersion)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
   const [logoTransparentBackground, setLogoTransparentBackground] =
@@ -60,6 +68,8 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
       onLogoPaddingChange={setLogoPadding}
       margin={margin}
       onMarginChange={setMargin}
+      minVersion={minVersion}
+      onMinVersionChange={setMinVersion}
       resolution={resolution}
       onResolutionChange={setResolution}
       style={style}
@@ -86,6 +96,8 @@ const defaultArgs = {
   onLogoPaddingChange: () => {},
   margin: DEFAULT_QR_MARGIN,
   onMarginChange: () => {},
+  minVersion: DEFAULT_MIN_QR_VERSION,
+  onMinVersionChange: () => {},
   resolution: DEFAULT_RESOLUTION,
   onResolutionChange: () => {},
   style: createDefaultQrStyle(),
@@ -103,4 +115,9 @@ export const Empty: Story = {
 export const WithLogo: Story = {
   args: defaultArgs,
   render: () => <StatefulQrForm withLogo />,
+}
+
+export const DenseModules: Story = {
+  args: { ...defaultArgs, minVersion: 12 },
+  render: () => <StatefulQrForm initialMinVersion={12} />,
 }

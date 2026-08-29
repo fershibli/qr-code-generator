@@ -1,3 +1,5 @@
+import { versionForModules } from '../constants'
+
 export type QrModuleKind =
   | 'finderOuter'
   | 'finderInner'
@@ -13,10 +15,6 @@ export const FINDER_SIZE = 7
 export const ALIGNMENT_RADIUS = 2
 export const ALIGNMENT_SIZE = ALIGNMENT_RADIUS * 2 + 1
 
-function versionFromSize(size: number): number {
-  return (size - 17) / 4
-}
-
 function finderOrigins(size: number): Array<[number, number]> {
   return [
     [0, 0],
@@ -30,7 +28,7 @@ export function getFinderOrigins(size: number): Array<[number, number]> {
 }
 
 export function getAlignmentCenters(size: number): Array<[number, number]> {
-  return alignmentCenters(versionFromSize(size), size)
+  return alignmentCenters(versionForModules(size), size)
 }
 
 function alignmentCenters(version: number, size: number): Array<[number, number]> {
@@ -124,7 +122,7 @@ function isTiming(row: number, col: number, size: number): boolean {
 }
 
 export function classifyQrModules(size: number): QrModuleKind[][] {
-  const version = versionFromSize(size)
+  const version = versionForModules(size)
   const centers = alignmentCenters(version, size)
   const grid: QrModuleKind[][] = []
 

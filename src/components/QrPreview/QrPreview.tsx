@@ -17,6 +17,8 @@ type QrPreviewProps = {
   previewUrl: string | null
   quietZoneColor?: string
   resolution: number
+  version?: number
+  moduleCount?: number
   loading: boolean
   error: string | null
   disabled: boolean
@@ -125,6 +127,8 @@ export function QrPreview({
   previewUrl,
   quietZoneColor = '#ffffff',
   resolution,
+  version,
+  moduleCount,
   loading,
   error,
   disabled,
@@ -213,6 +217,15 @@ export function QrPreview({
                 sx={{ textAlign: 'center', width: '100%' }}
               >
                 {resolution}x{resolution}px
+              </Typography>
+            ) : null}
+            {previewUrl && !disabled && version && moduleCount ? (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ textAlign: 'center', width: '100%' }}
+              >
+                Version {version} · {moduleCount}×{moduleCount} modules
               </Typography>
             ) : null}
           </Stack>
