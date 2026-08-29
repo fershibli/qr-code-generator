@@ -50,3 +50,22 @@ export const ResizedMarks: Story = {
   args: { ...defaultArgs, style: resizedMarksStyle() },
   render: () => <StatefulQrStyleForm initialStyle={resizedMarksStyle()} />,
 }
+
+function contourStyle(): QrStyle {
+  const style = createDefaultQrStyle()
+  return {
+    ...style,
+    contour: {
+      ...style.contour,
+      enabled: true,
+      shape: 'circle',
+      color: '#6a0dad',
+      width: 8,
+    },
+  }
+}
+
+export const WithContour: Story = {
+  args: { ...defaultArgs, style: contourStyle() },
+  render: () => <StatefulQrStyleForm initialStyle={contourStyle()} />,
+}
