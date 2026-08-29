@@ -80,6 +80,11 @@ export function QrForm({
   onStyleReset,
 }: QrFormProps) {
   const [styleOpen, setStyleOpen] = useState(false)
+  const densityModules = modulesForVersion(minVersion)
+  const densityLabel =
+    minVersion > MIN_QR_VERSION
+      ? `version ${minVersion}, ${densityModules}×${densityModules} modules`
+      : 'automatic'
 
   return (
     <Paper
@@ -222,11 +227,7 @@ export function QrForm({
 
         <Box>
           <Typography variant="subtitle2" gutterBottom>
-            Module density (
-            {minVersion > MIN_QR_VERSION
-              ? `version ${minVersion}, ${modulesForVersion(minVersion)}×${modulesForVersion(minVersion)} modules`
-              : 'automatic'}
-            )
+            Module density ({densityLabel})
           </Typography>
           <Slider
             value={minVersion}
