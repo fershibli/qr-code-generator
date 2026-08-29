@@ -6,6 +6,10 @@ function mockContext(overrides: Record<string, unknown> = {}) {
   return {
     fillStyle: '',
     fillRect: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    clip: vi.fn(),
+    rect: vi.fn(),
     beginPath: vi.fn(),
     closePath: vi.fn(),
     moveTo: vi.fn(),
