@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createDefaultQrStyle } from '../qrStyle'
+import { classifyQrModules } from './classifyQrModules'
 import { drawStyledQr } from './drawStyledQr'
 
 function mockContext(overrides: Record<string, unknown> = {}) {
@@ -19,6 +20,41 @@ function mockContext(overrides: Record<string, unknown> = {}) {
     roundRect: vi.fn(),
     fill: vi.fn(),
     ...overrides,
+  }
+}
+
+function contourStyle(overrides: Partial<ReturnType<typeof createDefaultQrStyle>['contour']> = {}) {
+  const style = createDefaultQrStyle()
+  style.contour = {
+    ...style.contour,
+    enabled: true,
+    color: '#ff0000',
+    width: 4,
+    ...overrides,
+  }
+  return style
+}
+
+/**
+ * Records every filled rect with the color it was painted in, so contour
+ * modules (red in these tests) can be told apart from the code itself.
+ */
+function trackFills(ctx: ReturnType<typeof mockContext>) {
+  const fills: Array<{ x: number; y: number; w: number; h: number; color: string }> =
+    []
+  ctx.fillRect = vi.fn((x: number, y: number, w: number, h: number) => {
+    fills.push({ x, y, w, h, color: String(ctx.fillStyle) })
+  })
+  return fills
+}
+
+/** Matrix that is dark only where `classifyQrModules` reports `kind`. */
+function matrixOfKind(size: number, data: boolean) {
+  const kinds = classifyQrModules(size)
+  return {
+    size,
+    get: (row: number, col: number) =>
+      (kinds[row]?.[col] === 'data') === data ? 1 : 0,
   }
 }
 
@@ -159,6 +195,123 @@ describe('drawStyledQr', () => {
       { resolution: 250, margin: 0, style },
     )
     expect(ctx.arc).toHaveBeenCalledWith(185, 185, 15, 0, Math.PI * 2)
+  })
+
+  it('returns the box the code occupies', () => {
+    const ctx = mockContext()
+    const plain = drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 0 },
+      { resolution: 250, margin: 2, style: createDefaultQrStyle() },
+    )
+    expect(plain).toEqual({ origin: 0, size: 250 })
+
+    const withContour = drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 0 },
+      { resolution: 290, margin: 2, style: contourStyle({ width: 6 }) },
+    )
+    // 21 modules + 4 quiet + 6 contour on each side = 41 modules of 7.07 px.
+    expect(withContour.origin).toBeCloseTo((290 / 41) * 6)
+    expect(withContour.size).toBeCloseTo((290 / 41) * 29)
+  })
+
+  it('clips the contour fill to the chosen outline', () => {
+    const ctx = mockContext()
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 290, margin: 2, style: contourStyle() },
+    )
+    expect(ctx.save).toHaveBeenCalledTimes(1)
+    expect(ctx.clip).toHaveBeenCalledTimes(1)
+    expect(ctx.restore).toHaveBeenCalledTimes(1)
+    expect(ctx.arc).toHaveBeenCalledWith(145, 145, 145, 0, Math.PI * 2)
+
+    const square = mockContext()
+    drawStyledQr(
+      square as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 290, margin: 2, style: contourStyle({ shape: 'square' }) },
+    )
+    expect(square.rect).toHaveBeenCalledWith(0, 0, 290, 290)
+
+    const diamond = mockContext()
+    drawStyledQr(
+      diamond as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 290, margin: 2, style: contourStyle({ shape: 'diamond' }) },
+    )
+    expect(diamond.moveTo).toHaveBeenCalledWith(145, 0)
+    expect(diamond.lineTo).toHaveBeenCalledWith(290, 145)
+
+    const rounded = mockContext()
+    drawStyledQr(
+      rounded as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 290, margin: 2, style: contourStyle({ shape: 'rounded' }) },
+    )
+    expect(rounded.roundRect).toHaveBeenCalledWith(0, 0, 290, 290, 58)
+  })
+
+  it('keeps the contour fill clear of the code and its quiet zone', () => {
+    const ctx = mockContext()
+    const fills = trackFills(ctx)
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 290, margin: 2, style: contourStyle({ width: 4 }) },
+    )
+
+    const contour = fills.filter((fill) => fill.color === '#ff0000')
+    expect(contour.length).toBeGreaterThan(0)
+    // 21 modules + 4 quiet + 4 contour per side => 37 modules of 290/37 px.
+    const step = 290 / 37
+    const coreStart = step * 4
+    const coreEnd = coreStart + step * 29
+    const overlapping = contour.filter(
+      ({ x, y, w, h }) =>
+        x + w > coreStart + 0.001 &&
+        x < coreEnd - 0.001 &&
+        y + h > coreStart + 0.001 &&
+        y < coreEnd - 0.001,
+    )
+    expect(overlapping).toHaveLength(0)
+  })
+
+  it('repeats the dark data modules in the contour fill', () => {
+    const ctx = mockContext()
+    const fills = trackFills(ctx)
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      matrixOfKind(21, true),
+      { resolution: 290, margin: 2, style: contourStyle({ width: 4 }) },
+    )
+    expect(fills.filter((fill) => fill.color === '#ff0000').length).toBeGreaterThan(
+      0,
+    )
+  })
+
+  it('never repeats function patterns in the contour fill', () => {
+    const ctx = mockContext()
+    const fills = trackFills(ctx)
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      matrixOfKind(21, false),
+      { resolution: 290, margin: 2, style: contourStyle({ width: 4 }) },
+    )
+    expect(fills.filter((fill) => fill.color === '#ff0000')).toHaveLength(0)
+  })
+
+  it('leaves the canvas untouched by the contour when it is off', () => {
+    const ctx = mockContext()
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 210, margin: 0, style: createDefaultQrStyle() },
+    )
+    expect(ctx.save).not.toHaveBeenCalled()
+    expect(ctx.clip).not.toHaveBeenCalled()
   })
 
   it('styles alignment as a group and timing modules individually', () => {

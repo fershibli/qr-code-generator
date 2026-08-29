@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { modulesForVersion } from '../constants'
+import { createDefaultQrStyle } from '../qrStyle'
 import { generateQrPng } from './generateQrPng'
 
 const { create } = vi.hoisted(() => ({ create: vi.fn() }))
@@ -194,6 +195,43 @@ describe('generateQrPng', () => {
     fillRect.mockClear()
     await generateQrPng({ ...options, logoTransparentBackground: true })
     expect(fillRect).not.toHaveBeenCalledWith(95, 95, 60, 60)
+
+    HTMLCanvasElement.prototype.getContext = original
+  })
+
+  it('keeps the logo proportional to the code inside a contour', async () => {
+    const fillRect = vi.fn()
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function getContext(
+      this: HTMLCanvasElement,
+      ...args: Parameters<HTMLCanvasElement['getContext']>
+    ) {
+      const ctx = original.apply(this, args) as CanvasRenderingContext2D | null
+      if (ctx) {
+        ctx.fillRect = fillRect
+      }
+      return ctx
+    } as HTMLCanvasElement['getContext']
+
+    const style = createDefaultQrStyle()
+    style.contour = { ...style.contour, enabled: true, width: 6 }
+    await generateQrPng({
+      url: 'https://example.com',
+      logoFile: new File([new Uint8Array([1, 2, 3])], 'logo.png', {
+        type: 'image/png',
+      }),
+      size: 20,
+      resolution: 250,
+      margin: 2,
+      logoPadding: 10,
+      style,
+    })
+
+    // 21 modules + 4 quiet + 6 contour per side => the code is 29/41 of 250 px,
+    // so a 20% logo with 10% padding is 42.4 px instead of 60 px.
+    const backing = fillRect.mock.calls.at(-1) as number[]
+    expect(backing[2]).toBeCloseTo(42.44, 1)
+    expect(backing[0]).toBeCloseTo(103.78, 1)
 
     HTMLCanvasElement.prototype.getContext = original
   })
