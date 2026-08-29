@@ -14,6 +14,7 @@ import {
   DEFAULT_RESOLUTION,
   type Resolution,
 } from './constants'
+import { createDefaultQrStyle, type QrStyle } from './qrStyle'
 import { generateQrPng } from './utils/generateQrPng'
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -33,6 +34,9 @@ function App() {
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
+  const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
+  const [logoTransparentBackground, setLogoTransparentBackground] =
+    useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
   const [loading, setLoading] = useState(false)
@@ -61,6 +65,8 @@ function App() {
         resolution,
         margin,
         logoPadding,
+        style,
+        logoTransparentBackground,
       })
         .then((result) => {
           if (cancelled) {
@@ -96,18 +102,49 @@ function App() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [trimmedUrl, logoFile, size, resolution, margin, logoPadding])
+  }, [
+    trimmedUrl,
+    logoFile,
+    size,
+    resolution,
+    margin,
+    logoPadding,
+    style,
+    logoTransparentBackground,
+  ])
 
   return (
-    <Box sx={{ minHeight: '100vh', py: { xs: 4, md: 6 } }}>
-      <Container maxWidth="lg">
-        <Stack spacing={4}>
+    <Box
+      sx={{
+        height: { xs: 'auto', md: '100dvh' },
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: { xs: 'visible', md: 'hidden' },
+      }}
+    >
+      <Container
+        maxWidth="lg"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          py: { xs: 2, md: 3 },
+          overflow: { md: 'hidden' },
+        }}
+      >
+        <Stack
+          spacing={{ xs: 2, md: 1.5 }}
+          sx={{ flex: 1, minHeight: 0, overflow: { md: 'hidden' } }}
+        >
           <Stack
             direction="row"
             spacing={2}
             sx={{
               justifyContent: 'space-between',
               alignItems: { xs: 'center', md: 'flex-start' },
+              flexShrink: 0,
             }}
           >
             <Box>
@@ -124,10 +161,25 @@ function App() {
 
           <Stack
             direction={{ xs: 'column', md: 'row' }}
-            spacing={3}
-            sx={{ alignItems: 'stretch' }}
+            spacing={{ xs: 5, md: 3 }}
+            useFlexGap
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              alignItems: 'stretch',
+              overflow: { md: 'hidden' },
+            }}
           >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                minHeight: 0,
+                order: { xs: 1, md: 0 },
+                display: 'flex',
+                overflow: { md: 'hidden' },
+              }}
+            >
               <QrForm
                 url={url}
                 onUrlChange={setUrl}
@@ -142,11 +194,28 @@ function App() {
                 onMarginChange={setMargin}
                 resolution={resolution}
                 onResolutionChange={setResolution}
+                style={style}
+                onStyleChange={setStyle}
+                logoTransparentBackground={logoTransparentBackground}
+                onLogoTransparentBackgroundChange={setLogoTransparentBackground}
+                onStyleReset={() => {
+                  setStyle(createDefaultQrStyle())
+                  setLogoTransparentBackground(false)
+                }}
               />
             </Box>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Box
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                minHeight: 0,
+                order: { xs: 0, md: 1 },
+                display: 'flex',
+              }}
+            >
               <QrPreview
                 previewUrl={trimmedUrl ? previewUrl : null}
+                quietZoneColor={style.quietZoneColor}
                 resolution={resolution}
                 loading={Boolean(trimmedUrl) && loading}
                 error={trimmedUrl ? error : null}
@@ -158,7 +227,9 @@ function App() {
               />
             </Box>
           </Stack>
-          <AppFooter />
+          <Box sx={{ flexShrink: 0 }}>
+            <AppFooter />
+          </Box>
         </Stack>
       </Container>
     </Box>

@@ -1,13 +1,19 @@
+import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Collapse from '@mui/material/Collapse'
 import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
 import Select from '@mui/material/Select'
 import Slider from '@mui/material/Slider'
 import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import { useState } from 'react'
 import {
   DEFAULT_LOGO_SIZE,
   DEFAULT_QR_MARGIN,
@@ -21,7 +27,9 @@ import {
   RESOLUTIONS,
   type Resolution,
 } from '../../constants'
+import type { QrStyle } from '../../qrStyle'
 import { LogoUpload } from '../LogoUpload'
+import { QrStyleForm } from '../QrStyleForm'
 
 type QrFormProps = {
   url: string
@@ -37,6 +45,11 @@ type QrFormProps = {
   onMarginChange: (value: number) => void
   resolution: Resolution
   onResolutionChange: (value: Resolution) => void
+  style: QrStyle
+  onStyleChange: (style: QrStyle) => void
+  logoTransparentBackground: boolean
+  onLogoTransparentBackgroundChange: (value: boolean) => void
+  onStyleReset: () => void
 }
 
 export function QrForm({
@@ -53,9 +66,38 @@ export function QrForm({
   onMarginChange,
   resolution,
   onResolutionChange,
+  style,
+  onStyleChange,
+  logoTransparentBackground,
+  onLogoTransparentBackgroundChange,
+  onStyleReset,
 }: QrFormProps) {
+  const [styleOpen, setStyleOpen] = useState(false)
+
   return (
-    <Paper sx={{ p: { xs: 2.5, sm: 3 }, height: '100%' }}>
+    <Paper
+      sx={{
+        height: { xs: 'auto', md: '100%' },
+        maxHeight: { md: '100%' },
+        overflow: 'hidden',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Box
+        sx={{
+          p: { xs: 2.5, sm: 3 },
+          overflow: { xs: 'visible', md: 'auto' },
+          flex: 1,
+          minHeight: 0,
+          '&::-webkit-scrollbar': { width: 8 },
+          '&::-webkit-scrollbar-thumb': {
+            borderRadius: 8,
+            bgcolor: 'action.disabled',
+          },
+        }}
+      >
       <Stack spacing={3}>
         <Box>
           <Typography variant="h6">Details</Typography>
@@ -82,6 +124,17 @@ export function QrForm({
 
         {logoFile ? (
           <>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={logoTransparentBackground}
+                  onChange={(event) =>
+                    onLogoTransparentBackgroundChange(event.target.checked)
+                  }
+                />
+              }
+              label="Transparent logo background"
+            />
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 Logo size ({size}%)
@@ -130,7 +183,7 @@ export function QrForm({
                 ]}
               />
               <Typography variant="caption" color="text.secondary">
-                White space around the logo, as a percentage of logo size.
+                Space around the logo, as a percentage of logo size.
               </Typography>
             </Box>
           </>
@@ -177,7 +230,26 @@ export function QrForm({
             ))}
           </Select>
         </FormControl>
+
+        <Button
+          variant="outlined"
+          fullWidth
+          startIcon={<PaletteOutlinedIcon />}
+          onClick={() => setStyleOpen((open) => !open)}
+          aria-expanded={styleOpen}
+        >
+          Customize style
+        </Button>
+
+        <Collapse in={styleOpen} unmountOnExit>
+          <QrStyleForm
+            style={style}
+            onStyleChange={onStyleChange}
+            onReset={onStyleReset}
+          />
+        </Collapse>
       </Stack>
+      </Box>
     </Paper>
   )
 }

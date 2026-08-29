@@ -18,6 +18,7 @@ describe('App', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.dataset.colorMode = 'light'
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
     vi.mocked(generateQrPng).mockReset()
     vi.mocked(generateQrPng).mockResolvedValue({
       blob: new Blob(['png'], { type: 'image/png' }),
@@ -46,6 +47,13 @@ describe('App', () => {
     await waitFor(() => {
       expect(generateQrPng).toHaveBeenCalled()
     })
+    expect(generateQrPng).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: 'https://example.com',
+        style: expect.objectContaining({ quietZoneColor: '#ffffff' }),
+        logoTransparentBackground: false,
+      }),
+    )
     await waitFor(() => {
       expect(screen.getByAltText('QR code preview')).toBeInTheDocument()
     })

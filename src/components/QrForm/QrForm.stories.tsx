@@ -7,6 +7,7 @@ import {
   DEFAULT_RESOLUTION,
   type Resolution,
 } from '../../constants'
+import { createDefaultQrStyle, type QrStyle } from '../../qrStyle'
 import { QrForm } from './QrForm'
 
 const SAMPLE_PREVIEW =
@@ -36,6 +37,9 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
+  const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
+  const [logoTransparentBackground, setLogoTransparentBackground] =
+    useState(false)
 
   return (
     <QrForm
@@ -58,6 +62,14 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
       onMarginChange={setMargin}
       resolution={resolution}
       onResolutionChange={setResolution}
+      style={style}
+      onStyleChange={setStyle}
+      logoTransparentBackground={logoTransparentBackground}
+      onLogoTransparentBackgroundChange={setLogoTransparentBackground}
+      onStyleReset={() => {
+        setStyle(createDefaultQrStyle())
+        setLogoTransparentBackground(false)
+      }}
     />
   )
 }
@@ -76,6 +88,11 @@ const defaultArgs = {
   onMarginChange: () => {},
   resolution: DEFAULT_RESOLUTION,
   onResolutionChange: () => {},
+  style: createDefaultQrStyle(),
+  onStyleChange: () => {},
+  logoTransparentBackground: false,
+  onLogoTransparentBackgroundChange: () => {},
+  onStyleReset: () => {},
 }
 
 export const Empty: Story = {

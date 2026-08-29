@@ -1,5 +1,7 @@
 import QRCode from 'qrcode'
+import { DEFAULT_QR_STYLE, type QrStyle } from '../qrStyle'
 import { canvasToRgbPngBlob } from './encodeRgbPng'
+import { drawStyledQr } from './drawStyledQr'
 
 export type GenerateQrPngOptions = {
   url: string
@@ -8,6 +10,8 @@ export type GenerateQrPngOptions = {
   resolution: number
   margin: number
   logoPadding: number
+  style?: QrStyle
+  logoTransparentBackground?: boolean
 }
 
 export type GenerateQrPngResult = {
@@ -39,6 +43,8 @@ function drawCenteredLogo(
   resolution: number,
   sizePercent: number,
   logoPadding: number,
+  backingColor: string,
+  transparentBackground: boolean,
 ) {
   const logoPx = resolution * (sizePercent / 100)
   const pad = logoPx * (logoPadding / 100)
@@ -46,8 +52,10 @@ function drawCenteredLogo(
   const boxX = (resolution - boxSize) / 2
   const boxY = (resolution - boxSize) / 2
 
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(boxX, boxY, boxSize, boxSize)
+  if (!transparentBackground) {
+    ctx.fillStyle = backingColor
+    ctx.fillRect(boxX, boxY, boxSize, boxSize)
+  }
 
   const scale = Math.min(logoPx / logo.width, logoPx / logo.height)
   const drawWidth = logo.width * scale
@@ -65,17 +73,10 @@ export async function generateQrPng({
   resolution,
   margin,
   logoPadding,
+  style = DEFAULT_QR_STYLE,
+  logoTransparentBackground = false,
 }: GenerateQrPngOptions): Promise<GenerateQrPngResult> {
-  const qrCanvas = document.createElement('canvas')
-  await QRCode.toCanvas(qrCanvas, url, {
-    width: resolution,
-    margin,
-    errorCorrectionLevel: 'H',
-    color: {
-      dark: '#000000',
-      light: '#ffffff',
-    },
-  })
+  const qr = QRCode.create(url, { errorCorrectionLevel: 'H' })
 
   const canvas = document.createElement('canvas')
   canvas.width = resolution
@@ -85,13 +86,19 @@ export async function generateQrPng({
     throw new Error('Could not get canvas context')
   }
 
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, resolution, resolution)
-  ctx.drawImage(qrCanvas, 0, 0, resolution, resolution)
+  drawStyledQr(ctx, qr.modules, { resolution, margin, style })
 
   if (logoFile) {
     const logo = await loadImage(logoFile)
-    drawCenteredLogo(ctx, logo, resolution, size, logoPadding)
+    drawCenteredLogo(
+      ctx,
+      logo,
+      resolution,
+      size,
+      logoPadding,
+      style.quietZoneColor,
+      logoTransparentBackground,
+    )
   }
 
   const blob = await canvasToRgbPngBlob(canvas)

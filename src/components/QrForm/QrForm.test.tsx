@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { createDefaultQrStyle } from '../../qrStyle'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { QrForm } from './QrForm'
 
@@ -25,6 +26,11 @@ function renderForm(
     onMarginChange: vi.fn(),
     resolution: 500 as const,
     onResolutionChange: vi.fn(),
+    style: createDefaultQrStyle(),
+    onStyleChange: vi.fn(),
+    logoTransparentBackground: false,
+    onLogoTransparentBackgroundChange: vi.fn(),
+    onStyleReset: vi.fn(),
     ...overrides,
   }
   return { ...renderWithTheme(<QrForm {...props} />), props }
@@ -60,6 +66,36 @@ describe('QrForm', () => {
     await user.click(screen.getByRole('combobox', { name: /Resolution/ }))
     await user.click(await screen.findByRole('option', { name: '750×750 px' }))
     expect(props.onResolutionChange).toHaveBeenCalledWith(750)
+  })
+
+  it('reveals style controls when Customize style is clicked', async () => {
+    const user = userEvent.setup()
+    renderForm()
+    expect(screen.queryByText('Quiet zone color')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Customize style' }))
+    expect(screen.getByText('Quiet zone color')).toBeInTheDocument()
+  })
+
+  it('hides the transparent logo switch without a logo', () => {
+    renderForm()
+    expect(
+      screen.queryByRole('switch', { name: 'Transparent logo background' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows the transparent logo switch below the upload when a logo is set', async () => {
+    const user = userEvent.setup()
+    const { props } = renderForm({
+      logoFile: file,
+      logoPreviewUrl: 'blob:logo',
+    })
+    const toggle = screen.getByRole('switch', {
+      name: 'Transparent logo background',
+    })
+    expect(toggle).toBeInTheDocument()
+    expect(screen.queryByText('Quiet zone color')).not.toBeInTheDocument()
+    await user.click(toggle)
+    expect(props.onLogoTransparentBackgroundChange).toHaveBeenCalledWith(true)
   })
 
   it('notifies parent when logo and margin sliders change', async () => {
