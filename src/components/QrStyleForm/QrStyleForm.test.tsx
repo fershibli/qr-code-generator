@@ -46,6 +46,22 @@ describe('QrStyleForm', () => {
     )
   })
 
+  it('warns only while the position marks are resized', () => {
+    const { unmount } = renderStyle()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    unmount()
+
+    renderStyle({
+      style: {
+        ...createDefaultQrStyle(),
+        finder: { ...createDefaultQrStyle().finder, scale: 115 },
+      },
+    })
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /size other than 100% usually stops the code from being read/,
+    )
+  })
+
   it('shows the current mark sizes', () => {
     renderStyle({
       style: {

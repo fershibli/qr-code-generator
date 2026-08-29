@@ -1,3 +1,4 @@
+import Alert from '@mui/material/Alert'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import FormControl from '@mui/material/FormControl'
@@ -186,8 +187,7 @@ export function QrStyleForm({
         <Box>
           <Typography variant="subtitle1">Position patterns</Typography>
           <Typography variant="caption" color="text.secondary">
-            Shape and size apply to the whole finder, not each module. Sizes
-            far from 100% can stop scanners from reading the code.
+            Shape and size apply to the whole finder, not each module.
           </Typography>
         </Box>
         <Box sx={fieldGridSx}>
@@ -239,6 +239,13 @@ export function QrStyleForm({
             onStyleChange({ ...style, finder: { ...style.finder, scale } })
           }
         />
+        {style.finder.scale === DEFAULT_PATTERN_SCALE ? null : (
+          <Alert severity="warning">
+            Scanners work out the module size from these marks, so any size
+            other than 100% usually stops the code from being read. Test it
+            before you publish it.
+          </Alert>
+        )}
       </Stack>
 
       <Stack spacing={1.5}>
@@ -246,6 +253,8 @@ export function QrStyleForm({
           <Typography variant="subtitle1">Alignment pattern</Typography>
           <Typography variant="caption" color="text.secondary">
             Shape and size apply to the whole alignment mark, not each module.
+            Resizing this one kept the code readable across the whole range in
+            testing.
           </Typography>
         </Box>
         <Box sx={fieldGridSx}>
