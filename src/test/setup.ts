@@ -44,6 +44,14 @@ HTMLCanvasElement.prototype.getContext = function getContext(
     fillStyle: '#ffffff',
     fillRect() {},
     drawImage() {},
+    beginPath() {},
+    closePath() {},
+    moveTo() {},
+    lineTo() {},
+    arc() {},
+    quadraticCurveTo() {},
+    roundRect() {},
+    fill() {},
     getImageData() {
       return { data, width, height }
     },

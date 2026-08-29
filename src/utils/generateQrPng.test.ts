@@ -1,14 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generateQrPng } from './generateQrPng'
 
+function mockModules(size = 21) {
+  return {
+    size,
+    get: (row: number, col: number) => {
+      const onFinder =
+        (row < 7 && col < 7) ||
+        (row < 7 && col >= size - 7) ||
+        (row >= size - 7 && col < 7)
+      return onFinder || (row + col) % 2 === 0 ? 1 : 0
+    },
+  }
+}
+
 vi.mock('qrcode', () => ({
   default: {
-    toCanvas: vi.fn(
-      async (canvas: HTMLCanvasElement, _url: string, options: { width: number }) => {
-        canvas.width = options.width
-        canvas.height = options.width
-      },
-    ),
+    create: vi.fn(() => ({
+      modules: mockModules(),
+    })),
   },
 }))
 
@@ -63,14 +73,8 @@ describe('generateQrPng', () => {
 
   it('throws when the output canvas has no context', async () => {
     const original = HTMLCanvasElement.prototype.getContext
-    let calls = 0
-    HTMLCanvasElement.prototype.getContext = function getContext(
-      this: HTMLCanvasElement,
-      ...args: Parameters<HTMLCanvasElement['getContext']>
-    ) {
-      calls += 1
-      if (calls === 1) return null
-      return original.apply(this, args)
+    HTMLCanvasElement.prototype.getContext = function getContext() {
+      return null
     } as HTMLCanvasElement['getContext']
 
     await expect(
