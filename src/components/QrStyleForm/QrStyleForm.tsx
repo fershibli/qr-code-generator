@@ -4,10 +4,16 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Slider from '@mui/material/Slider'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
+import {
+  DEFAULT_PATTERN_SCALE,
+  MAX_PATTERN_SCALE,
+  MIN_PATTERN_SCALE,
+} from '../../constants'
 import type { QrModuleShape, QrStyle } from '../../qrStyle'
 
 const SHAPE_OPTIONS: Array<{ value: QrModuleShape; label: string }> = [
@@ -104,6 +110,40 @@ function ShapeSelect({ label, value, onChange }: ShapeSelectProps) {
   )
 }
 
+type ScaleSliderProps = {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}
+
+function ScaleSlider({ label, value, onChange }: ScaleSliderProps) {
+  return (
+    <Box>
+      <Typography variant="subtitle2" component="p" gutterBottom>
+        {label} ({value}%)
+      </Typography>
+      <Slider
+        value={value}
+        min={MIN_PATTERN_SCALE}
+        max={MAX_PATTERN_SCALE}
+        step={5}
+        size="small"
+        valueLabelDisplay="auto"
+        valueLabelFormat={(scale) => `${scale}%`}
+        aria-label={label}
+        onChange={(_event, next) => {
+          onChange(Array.isArray(next) ? next[0] : next)
+        }}
+        marks={[
+          { value: MIN_PATTERN_SCALE, label: `${MIN_PATTERN_SCALE}%` },
+          { value: DEFAULT_PATTERN_SCALE, label: `${DEFAULT_PATTERN_SCALE}%` },
+          { value: MAX_PATTERN_SCALE, label: `${MAX_PATTERN_SCALE}%` },
+        ]}
+      />
+    </Box>
+  )
+}
+
 const fieldGridSx = {
   display: 'grid',
   gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
@@ -146,7 +186,8 @@ export function QrStyleForm({
         <Box>
           <Typography variant="subtitle1">Position patterns</Typography>
           <Typography variant="caption" color="text.secondary">
-            Shape applies to the whole finder, not each module.
+            Shape and size apply to the whole finder, not each module. Sizes
+            far from 100% can stop scanners from reading the code.
           </Typography>
         </Box>
         <Box sx={fieldGridSx}>
@@ -191,13 +232,20 @@ export function QrStyleForm({
             }
           />
         </Box>
+        <ScaleSlider
+          label="Position pattern size"
+          value={style.finder.scale}
+          onChange={(scale) =>
+            onStyleChange({ ...style, finder: { ...style.finder, scale } })
+          }
+        />
       </Stack>
 
       <Stack spacing={1.5}>
         <Box>
           <Typography variant="subtitle1">Alignment pattern</Typography>
           <Typography variant="caption" color="text.secondary">
-            Shape applies to the whole alignment mark, not each module.
+            Shape and size apply to the whole alignment mark, not each module.
           </Typography>
         </Box>
         <Box sx={fieldGridSx}>
@@ -232,6 +280,16 @@ export function QrStyleForm({
             }
           />
         </Box>
+        <ScaleSlider
+          label="Alignment pattern size"
+          value={style.alignment.scale}
+          onChange={(scale) =>
+            onStyleChange({
+              ...style,
+              alignment: { ...style.alignment, scale },
+            })
+          }
+        />
       </Stack>
 
       <Stack spacing={1.5}>
