@@ -12,22 +12,14 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-function StatefulQrStyleForm({ hasLogo = false }: { hasLogo?: boolean }) {
+function StatefulQrStyleForm() {
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
-  const [logoTransparentBackground, setLogoTransparentBackground] =
-    useState(false)
 
   return (
     <QrStyleForm
       style={style}
       onStyleChange={setStyle}
-      hasLogo={hasLogo}
-      logoTransparentBackground={logoTransparentBackground}
-      onLogoTransparentBackgroundChange={setLogoTransparentBackground}
-      onReset={() => {
-        setStyle(createDefaultQrStyle())
-        setLogoTransparentBackground(false)
-      }}
+      onReset={() => setStyle(createDefaultQrStyle())}
     />
   )
 }
@@ -35,18 +27,10 @@ function StatefulQrStyleForm({ hasLogo = false }: { hasLogo?: boolean }) {
 const defaultArgs = {
   style: createDefaultQrStyle(),
   onStyleChange: fn(),
-  hasLogo: false,
-  logoTransparentBackground: false,
-  onLogoTransparentBackgroundChange: fn(),
   onReset: fn(),
 }
 
 export const Default: Story = {
   args: defaultArgs,
   render: () => <StatefulQrStyleForm />,
-}
-
-export const WithLogo: Story = {
-  args: { ...defaultArgs, hasLogo: true },
-  render: () => <StatefulQrStyleForm hasLogo />,
 }

@@ -1,12 +1,10 @@
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import FormControl from '@mui/material/FormControl'
-import FormControlLabel from '@mui/material/FormControlLabel'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
-import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useEffect, useState } from 'react'
@@ -16,6 +14,7 @@ const SHAPE_OPTIONS: Array<{ value: QrModuleShape; label: string }> = [
   { value: 'square', label: 'Square' },
   { value: 'rounded', label: 'Rounded' },
   { value: 'circle', label: 'Circle' },
+  { value: 'triangle', label: 'Triangle' },
 ]
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
@@ -114,18 +113,12 @@ const fieldGridSx = {
 type QrStyleFormProps = {
   style: QrStyle
   onStyleChange: (style: QrStyle) => void
-  hasLogo: boolean
-  logoTransparentBackground: boolean
-  onLogoTransparentBackgroundChange: (value: boolean) => void
   onReset: () => void
 }
 
 export function QrStyleForm({
   style,
   onStyleChange,
-  hasLogo,
-  logoTransparentBackground,
-  onLogoTransparentBackgroundChange,
   onReset,
 }: QrStyleFormProps) {
   return (
@@ -150,7 +143,12 @@ export function QrStyleForm({
       />
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle1">Position patterns</Typography>
+        <Box>
+          <Typography variant="subtitle1">Position patterns</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Shape applies to the whole finder, not each module.
+          </Typography>
+        </Box>
         <Box sx={fieldGridSx}>
           <ColorField
             label="Position outer color"
@@ -196,7 +194,12 @@ export function QrStyleForm({
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle1">Alignment pattern</Typography>
+        <Box>
+          <Typography variant="subtitle1">Alignment pattern</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Shape applies to the whole alignment mark, not each module.
+          </Typography>
+        </Box>
         <Box sx={fieldGridSx}>
           <ColorField
             label="Alignment outer color"
@@ -232,7 +235,12 @@ export function QrStyleForm({
       </Stack>
 
       <Stack spacing={1.5}>
-        <Typography variant="subtitle1">Timing pattern</Typography>
+        <Box>
+          <Typography variant="subtitle1">Timing pattern</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Each timing module uses this shape.
+          </Typography>
+        </Box>
         <Box sx={fieldGridSx}>
           <ColorField
             label="Timing color"
@@ -256,20 +264,6 @@ export function QrStyleForm({
           />
         </Box>
       </Stack>
-
-      {hasLogo ? (
-        <FormControlLabel
-          control={
-            <Switch
-              checked={logoTransparentBackground}
-              onChange={(event) =>
-                onLogoTransparentBackgroundChange(event.target.checked)
-              }
-            />
-          }
-          label="Transparent logo background"
-        />
-      ) : null}
 
       <Box>
         <Button variant="text" onClick={onReset} sx={{ px: 0 }}>

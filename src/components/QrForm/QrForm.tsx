@@ -3,12 +3,14 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Collapse from '@mui/material/Collapse'
 import FormControl from '@mui/material/FormControl'
+import FormControlLabel from '@mui/material/FormControlLabel'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
 import Select from '@mui/material/Select'
 import Slider from '@mui/material/Slider'
 import Stack from '@mui/material/Stack'
+import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { useState } from 'react'
@@ -73,7 +75,29 @@ export function QrForm({
   const [styleOpen, setStyleOpen] = useState(false)
 
   return (
-    <Paper sx={{ p: { xs: 2.5, sm: 3 }, height: '100%' }}>
+    <Paper
+      sx={{
+        height: { xs: 'auto', md: '100%' },
+        maxHeight: { md: '100%' },
+        overflow: 'hidden',
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Box
+        sx={{
+          p: { xs: 2.5, sm: 3 },
+          overflow: { xs: 'visible', md: 'auto' },
+          flex: 1,
+          minHeight: 0,
+          '&::-webkit-scrollbar': { width: 8 },
+          '&::-webkit-scrollbar-thumb': {
+            borderRadius: 8,
+            bgcolor: 'action.disabled',
+          },
+        }}
+      >
       <Stack spacing={3}>
         <Box>
           <Typography variant="h6">Details</Typography>
@@ -100,6 +124,17 @@ export function QrForm({
 
         {logoFile ? (
           <>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={logoTransparentBackground}
+                  onChange={(event) =>
+                    onLogoTransparentBackgroundChange(event.target.checked)
+                  }
+                />
+              }
+              label="Transparent logo background"
+            />
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 Logo size ({size}%)
@@ -210,13 +245,11 @@ export function QrForm({
           <QrStyleForm
             style={style}
             onStyleChange={onStyleChange}
-            hasLogo={Boolean(logoFile)}
-            logoTransparentBackground={logoTransparentBackground}
-            onLogoTransparentBackgroundChange={onLogoTransparentBackgroundChange}
             onReset={onStyleReset}
           />
         </Collapse>
       </Stack>
+      </Box>
     </Paper>
   )
 }

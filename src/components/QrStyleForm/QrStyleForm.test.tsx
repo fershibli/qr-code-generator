@@ -11,9 +11,6 @@ function renderStyle(
   const props = {
     style: createDefaultQrStyle(),
     onStyleChange: vi.fn(),
-    hasLogo: false,
-    logoTransparentBackground: false,
-    onLogoTransparentBackgroundChange: vi.fn(),
     onReset: vi.fn(),
     ...overrides,
   }
@@ -21,20 +18,11 @@ function renderStyle(
 }
 
 describe('QrStyleForm', () => {
-  it('hides the transparent logo switch when no logo is selected', () => {
+  it('does not include the transparent logo switch', () => {
     renderStyle()
     expect(
       screen.queryByRole('switch', { name: 'Transparent logo background' }),
     ).not.toBeInTheDocument()
-  })
-
-  it('toggles transparent logo background when a logo is selected', async () => {
-    const user = userEvent.setup()
-    const { props } = renderStyle({ hasLogo: true })
-    await user.click(
-      screen.getByRole('switch', { name: 'Transparent logo background' }),
-    )
-    expect(props.onLogoTransparentBackgroundChange).toHaveBeenCalledWith(true)
   })
 
   it('resets style to the defaults', async () => {
@@ -102,7 +90,7 @@ describe('QrStyleForm', () => {
     await user.click(screen.getByRole('combobox', { name: 'Position center shape' }))
     await user.click(await screen.findByRole('option', { name: 'Rounded' }))
     await user.click(screen.getByRole('combobox', { name: 'Alignment shape' }))
-    await user.click(await screen.findByRole('option', { name: 'Circle' }))
+    await user.click(await screen.findByRole('option', { name: 'Triangle' }))
     await user.click(screen.getByRole('combobox', { name: 'Timing shape' }))
     await user.click(await screen.findByRole('option', { name: 'Rounded' }))
 
