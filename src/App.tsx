@@ -41,6 +41,10 @@ function App() {
     useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [blob, setBlob] = useState<Blob | null>(null)
+  const [matrixInfo, setMatrixInfo] = useState<{
+    version: number
+    moduleCount: number
+  } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -81,6 +85,10 @@ function App() {
             return result.objectUrl
           })
           setBlob(result.blob)
+          setMatrixInfo({
+            version: result.version,
+            moduleCount: result.moduleCount,
+          })
           setError(null)
         })
         .catch((caught: unknown) => {
@@ -94,6 +102,7 @@ function App() {
             return null
           })
           setBlob(null)
+          setMatrixInfo(null)
           setError(message)
         })
         .finally(() => {
@@ -223,6 +232,8 @@ function App() {
                 previewUrl={trimmedUrl ? previewUrl : null}
                 quietZoneColor={style.quietZoneColor}
                 resolution={resolution}
+                version={matrixInfo?.version}
+                moduleCount={matrixInfo?.moduleCount}
                 loading={Boolean(trimmedUrl) && loading}
                 error={trimmedUrl ? error : null}
                 disabled={!trimmedUrl || !blob}
