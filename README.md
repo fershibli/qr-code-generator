@@ -8,6 +8,7 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 
 - [Features](#features)
 - [How to use](#how-to-use)
+- [Scannability](#scannability)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Development](#development)
@@ -17,8 +18,11 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 ## Features
 
 - Encode any URL into a square PNG QR code (no alpha channel).
+- **Module density**: force a minimum QR version (automatic through 40) to pack more, smaller squares into the same URL. The preview caption reports the version and module count that were actually encoded.
 - Optional centered logo, with size and padding sliders that appear only after a logo is selected.
 - Collapsible **Customize style** controls for quiet-zone, data, finder, alignment, and timing colors and shapes. Finder and alignment shapes apply to the whole pattern (square, rounded, circle, or triangle), not each module.
+- **Position and alignment mark size** (60–140%), applied to the whole mark. The 7×7 finder box the spec defines never moves; only the drawn shape grows or shrinks around its center.
+- **Contour fill**: wrap the code in a circle, square, rounded square, or diamond filled with copies of the code's own data modules — no position, alignment, or timing marks — from 1 to 16 modules wide.
 - On desktop the form scrolls inside the left card so the preview stays in view. On mobile the preview sits above the form; a compact 20vh bar (QR + Download) appears only while that card is scrolled out of view.
 - Optional transparent logo backing so QR modules show through around the logo (the PNG stays opaque RGB). The switch is on the form, below the logo upload, and only appears after a logo is selected.
 - Adjustable quiet-zone margin (0–10 modules).
@@ -45,10 +49,39 @@ Type a full URL including `https://` so scanners open the link. The preview upda
 ![Generated QR code for the project GitHub URL](docs/screenshots/generated.png)
 
 - **QR margin** is the quiet zone around the code, in modules (default 2).
+- **Module density** is the smallest QR version to encode with (default automatic).
 - **Resolution** is the exported PNG size. The preview stays 500×500 px; the caption under **Download** shows the file size, such as `500x500px`.
-- **Customize style** expands a Style section on the same card: quiet-zone and data colors, finder/alignment/timing colors and shapes (square, rounded, circle, or triangle), and **Reset to default**. Finder and alignment use one shape for the whole mark.
+- **Customize style** expands a Style section on the same card: quiet-zone and data colors, finder/alignment/timing colors and shapes (square, rounded, circle, or triangle), position and alignment mark sizes, the contour fill, and **Reset to default**. Finder and alignment use one shape for the whole mark.
 
-### 3. Optionally add a logo
+### 3. Make the code denser
+
+The number of squares is not a free choice: it comes from the QR *version*, which fixes the matrix at `4 × version + 17` modules per side. **Module density** sets the smallest version to encode with, from **Auto** through **40**, so the same short URL can be packed into a much finer grid.
+
+![The density slider set to version 12, with a 65×65 module code in the preview](docs/screenshots/density.png)
+
+The app encodes once automatically and only re-encodes at your version when it is higher, so a long URL never fails because of this setting — it just keeps the version it needs. The caption under **Download** shows what came out, such as `Version 12 · 65×65 modules`.
+
+### 4. Resize the position and alignment marks
+
+Under **Customize style**, **Position pattern size** and **Alignment pattern size** scale the whole drawn mark (60–140%) around its own center. The underlying modules stay exactly where the spec puts them; only the drawing changes.
+
+![Position patterns at 130% with a warning that scanners may not read the code](docs/screenshots/mark-size.png)
+
+Resizing the position marks is the one setting here that breaks scanning — see [Scannability](#scannability) — so the form warns as soon as it leaves 100%.
+
+### 5. Wrap the code in a contour
+
+**Contour** fills the space around the code with copies of its own pixels, clipped to an outline. Only data modules repeat: no second set of position or alignment marks is ever painted, so a scanner still sees exactly one code.
+
+![A circular purple contour of QR pixels around the code](docs/screenshots/contour.png)
+
+- **Contour shape** is the outline the fill is clipped to: circle, square, rounded square, or diamond.
+- **Contour module shape** and **Contour color** style the repeated pixels.
+- **Contour width** is how many modules the band adds on each side (1–16). A round outline needs a wide band — roughly 8 modules or more — before it can enclose the whole code.
+
+The code keeps a quiet zone of at least four modules from the fill and shrinks to make room for the band, so the exported PNG stays the resolution you picked. A centered logo shrinks with the code, keeping the same share of it.
+
+### 6. Optionally add a logo
 
 **Upload logo** accepts an image. Logo size (10–40%), logo padding (0–25%), and **Transparent logo background** appear only when a file is selected. Recent logos stay under the upload control for reuse. Transparent backing skips the opaque rectangle behind the logo so modules (and the logo’s own pixels) show through.
 
@@ -56,15 +89,33 @@ Type a full URL including `https://` so scanners open the link. The preview upda
 
 Click **Download** to save `qr-code-{n}x{n}.png`. Removing the current logo does not delete it from recents.
 
-### 4. Switch light and dark mode
+### 7. Switch light and dark mode
 
 Use the sun/moon switch in the header. The choice is stored in `localStorage` (`color-mode`). The QR preview frame uses the quiet-zone color so it matches the exported PNG.
 
 ![The same generator in dark mode](docs/screenshots/dark-mode.png)
 
+## Scannability
+
+Every option here was checked by generating the PNG in the running app (Playwright) and decoding it with [`jsQR`](https://github.com/cozmo/jsQR), not just by looking at it.
+
+| Setting | Still decodes |
+| --- | --- |
+| Baseline, no styling | ✅ |
+| Module density, up to version 40 | ✅ |
+| Contour fill, any outline or width | ✅ |
+| Alignment pattern size, 60–140% | ✅ |
+| Position pattern size, anything but 100% | ❌ at every step from 60% to 140% |
+
+Scanners derive the module size from the three position patterns, so a mark drawn larger or smaller than its 7×7 box makes the decoder sample the grid at the wrong pitch. The control is still there — other generators offer it too — but the style form shows a warning while it is off 100%, and codes made that way should be tested on a real scanner before being published.
+
+The contour fill is safe because it never repeats a function pattern and never comes closer than four modules to the code.
+
 ## Architecture
 
-The UI is a single page. `App` owns form state, debounces generation, and hands a blob to the preview for download. QR drawing is client-side: `qrcode` builds the bit matrix (`QRCode.create`), modules are classified and painted on a canvas with per-region colors and shapes, an optional logo is composited in the center, and a custom encoder writes an RGB PNG (color type 2) via `fflate`.
+The UI is a single page. `App` owns form state, debounces generation, and hands a blob to the preview for download. QR drawing is client-side: `qrcode` builds the bit matrix (`QRCode.create`, re-run at a higher version when the density slider asks for one), modules are classified and painted on a canvas with per-region colors, shapes, and mark sizes, an optional logo is composited in the center, and a custom encoder writes an RGB PNG (color type 2) via `fflate`.
+
+`drawStyledQr` places the code and the contour band on one module lattice: the canvas is divided into `size + (quietZone + contourWidth) × 2` modules, the code occupies the middle square, and the band outside it repeats the code's data modules, clipped to the contour outline. It returns the box the code occupies so the logo scales with the code rather than with the canvas.
 
 ```mermaid
 flowchart LR
@@ -169,3 +220,4 @@ Ideas that are not in the app yet:
 - Copy PNG to the clipboard, in addition to download.
 - PWA / installable shell for offline use of the last generated code.
 - Error-correction level control (today it is fixed at `H` so logos remain readable).
+- An in-app scan check: decode the generated PNG and flag styles that stop it from being read.
