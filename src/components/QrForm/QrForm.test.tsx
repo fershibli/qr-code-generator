@@ -24,6 +24,8 @@ function renderForm(
     onLogoPaddingChange: vi.fn(),
     margin: 2,
     onMarginChange: vi.fn(),
+    minVersion: 1,
+    onMinVersionChange: vi.fn(),
     resolution: 500 as const,
     onResolutionChange: vi.fn(),
     style: createDefaultQrStyle(),
@@ -105,7 +107,7 @@ describe('QrForm', () => {
       logoPreviewUrl: 'blob:logo',
     })
     const sliders = screen.getAllByRole('slider')
-    expect(sliders).toHaveLength(3)
+    expect(sliders).toHaveLength(4)
     sliders[0].focus()
     await user.keyboard('{ArrowRight}')
     expect(props.onSizeChange).toHaveBeenCalled()

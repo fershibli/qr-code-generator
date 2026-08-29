@@ -10,6 +10,7 @@ import { AppFooter } from './components/AppFooter'
 import {
   DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
+  DEFAULT_MIN_QR_VERSION,
   DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
   type Resolution,
@@ -33,6 +34,7 @@ function App() {
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
+  const [minVersion, setMinVersion] = useState(DEFAULT_MIN_QR_VERSION)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
   const [logoTransparentBackground, setLogoTransparentBackground] =
@@ -67,6 +69,7 @@ function App() {
         logoPadding,
         style,
         logoTransparentBackground,
+        minVersion,
       })
         .then((result) => {
           if (cancelled) {
@@ -111,6 +114,7 @@ function App() {
     logoPadding,
     style,
     logoTransparentBackground,
+    minVersion,
   ])
 
   return (
@@ -192,6 +196,8 @@ function App() {
                 onLogoPaddingChange={setLogoPadding}
                 margin={margin}
                 onMarginChange={setMargin}
+                minVersion={minVersion}
+                onMinVersionChange={setMinVersion}
                 resolution={resolution}
                 onResolutionChange={setResolution}
                 style={style}

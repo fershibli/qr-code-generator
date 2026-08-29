@@ -3,6 +3,7 @@ import { useState } from 'react'
 import {
   DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
+  DEFAULT_MIN_QR_VERSION,
   DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
   type Resolution,
@@ -36,6 +37,7 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
+  const [minVersion, setMinVersion] = useState(DEFAULT_MIN_QR_VERSION)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
   const [logoTransparentBackground, setLogoTransparentBackground] =
@@ -60,6 +62,8 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
       onLogoPaddingChange={setLogoPadding}
       margin={margin}
       onMarginChange={setMargin}
+      minVersion={minVersion}
+      onMinVersionChange={setMinVersion}
       resolution={resolution}
       onResolutionChange={setResolution}
       style={style}
@@ -86,6 +90,8 @@ const defaultArgs = {
   onLogoPaddingChange: () => {},
   margin: DEFAULT_QR_MARGIN,
   onMarginChange: () => {},
+  minVersion: DEFAULT_MIN_QR_VERSION,
+  onMinVersionChange: () => {},
   resolution: DEFAULT_RESOLUTION,
   onResolutionChange: () => {},
   style: createDefaultQrStyle(),

@@ -21,10 +21,13 @@ import {
   MAX_LOGO_SIZE,
   MAX_QR_MARGIN,
   MAX_LOGO_PADDING,
+  MAX_QR_VERSION,
   MIN_LOGO_SIZE,
   MIN_QR_MARGIN,
   MIN_LOGO_PADDING,
+  MIN_QR_VERSION,
   RESOLUTIONS,
+  modulesForVersion,
   type Resolution,
 } from '../../constants'
 import type { QrStyle } from '../../qrStyle'
@@ -43,6 +46,8 @@ type QrFormProps = {
   onLogoPaddingChange: (value: number) => void
   margin: number
   onMarginChange: (value: number) => void
+  minVersion: number
+  onMinVersionChange: (value: number) => void
   resolution: Resolution
   onResolutionChange: (value: Resolution) => void
   style: QrStyle
@@ -64,6 +69,8 @@ export function QrForm({
   onLogoPaddingChange,
   margin,
   onMarginChange,
+  minVersion,
+  onMinVersionChange,
   resolution,
   onResolutionChange,
   style,
@@ -210,6 +217,41 @@ export function QrForm({
           />
           <Typography variant="caption" color="text.secondary">
             Quiet zone around the QR code, in modules.
+          </Typography>
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" gutterBottom>
+            Module density (
+            {minVersion > MIN_QR_VERSION
+              ? `version ${minVersion}, ${modulesForVersion(minVersion)}×${modulesForVersion(minVersion)} modules`
+              : 'automatic'}
+            )
+          </Typography>
+          <Slider
+            value={minVersion}
+            min={MIN_QR_VERSION}
+            max={MAX_QR_VERSION}
+            step={1}
+            valueLabelDisplay="auto"
+            valueLabelFormat={(value) =>
+              value > MIN_QR_VERSION ? `v${value}` : 'auto'
+            }
+            onChange={(_event, value) => {
+              onMinVersionChange(Array.isArray(value) ? value[0] : value)
+            }}
+            marks={[
+              { value: MIN_QR_VERSION, label: 'Auto' },
+              { value: 10, label: '10' },
+              { value: 20, label: '20' },
+              { value: 30, label: '30' },
+              { value: MAX_QR_VERSION, label: `${MAX_QR_VERSION}` },
+            ]}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Smallest QR version to encode with. Higher versions pack more,
+            smaller squares; the version rises on its own when the URL needs
+            more room.
           </Typography>
         </Box>
 
