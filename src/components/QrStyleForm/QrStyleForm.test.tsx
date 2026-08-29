@@ -5,6 +5,11 @@ import { createDefaultQrStyle } from '../../qrStyle'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { QrStyleForm } from './QrStyleForm'
 
+/** Fields render their label and current value as siblings in one row. */
+function labelRow(label: string) {
+  return screen.getByText(label).parentElement
+}
+
 function renderStyle(
   overrides: Partial<Parameters<typeof QrStyleForm>[0]> = {},
 ) {
@@ -69,10 +74,8 @@ describe('QrStyleForm', () => {
         finder: { ...createDefaultQrStyle().finder, scale: 130 },
       },
     })
-    expect(screen.getByText('Position pattern size (130%)')).toBeInTheDocument()
-    expect(
-      screen.getByText('Alignment pattern size (100%)'),
-    ).toBeInTheDocument()
+    expect(labelRow('Position pattern size')).toHaveTextContent('130%')
+    expect(labelRow('Alignment pattern size')).toHaveTextContent('100%')
   })
 
   it('hides the contour controls until the switch is on', async () => {
@@ -98,7 +101,7 @@ describe('QrStyleForm', () => {
     style.contour = { ...style.contour, enabled: true }
     const { props } = renderStyle({ style })
 
-    expect(screen.getByText('Contour width (6 modules)')).toBeInTheDocument()
+    expect(labelRow('Contour width')).toHaveTextContent('6 modules')
 
     await user.click(screen.getByRole('combobox', { name: 'Contour shape' }))
     await user.click(await screen.findByRole('option', { name: 'Diamond' }))
@@ -173,7 +176,8 @@ describe('QrStyleForm', () => {
     fireEvent.change(hex, { target: { value: '#fff' } })
     expect(props.onStyleChange).not.toHaveBeenCalled()
     fireEvent.blur(hex)
-    expect(hex).toHaveValue('#ffffff')
+    // The field shows the digits only; the # is a fixed adornment.
+    expect(hex).toHaveValue('ffffff')
   })
 
   it('updates finder, alignment, and timing colors and shapes', async () => {
