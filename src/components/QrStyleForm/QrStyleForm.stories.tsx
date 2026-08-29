@@ -12,8 +12,10 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-function StatefulQrStyleForm() {
-  const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
+function StatefulQrStyleForm({ initialStyle }: { initialStyle?: QrStyle }) {
+  const [style, setStyle] = useState<QrStyle>(
+    () => initialStyle ?? createDefaultQrStyle(),
+  )
 
   return (
     <QrStyleForm
@@ -30,7 +32,21 @@ const defaultArgs = {
   onReset: fn(),
 }
 
+function resizedMarksStyle(): QrStyle {
+  const style = createDefaultQrStyle()
+  return {
+    ...style,
+    finder: { ...style.finder, outerShape: 'circle', scale: 130 },
+    alignment: { ...style.alignment, shape: 'circle', scale: 70 },
+  }
+}
+
 export const Default: Story = {
   args: defaultArgs,
   render: () => <StatefulQrStyleForm />,
+}
+
+export const ResizedMarks: Story = {
+  args: { ...defaultArgs, style: resizedMarksStyle() },
+  render: () => <StatefulQrStyleForm initialStyle={resizedMarksStyle()} />,
 }

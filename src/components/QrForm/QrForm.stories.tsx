@@ -22,7 +22,13 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
+function StatefulQrForm({
+  withLogo = false,
+  initialMinVersion = DEFAULT_MIN_QR_VERSION,
+}: {
+  withLogo?: boolean
+  initialMinVersion?: number
+}) {
   const [url, setUrl] = useState(withLogo ? 'https://example.com' : '')
   const [logoFile, setLogoFile] = useState<File | null>(
     withLogo
@@ -37,7 +43,7 @@ function StatefulQrForm({ withLogo = false }: { withLogo?: boolean }) {
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
   const [logoPadding, setLogoPadding] = useState(DEFAULT_LOGO_PADDING)
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
-  const [minVersion, setMinVersion] = useState(DEFAULT_MIN_QR_VERSION)
+  const [minVersion, setMinVersion] = useState(initialMinVersion)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
   const [logoTransparentBackground, setLogoTransparentBackground] =
@@ -109,4 +115,9 @@ export const Empty: Story = {
 export const WithLogo: Story = {
   args: defaultArgs,
   render: () => <StatefulQrForm withLogo />,
+}
+
+export const DenseModules: Story = {
+  args: { ...defaultArgs, minVersion: 12 },
+  render: () => <StatefulQrForm initialMinVersion={12} />,
 }
