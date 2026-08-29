@@ -1,3 +1,5 @@
+import { DEFAULT_PATTERN_SCALE } from './constants'
+
 export type QrModuleShape = 'square' | 'rounded' | 'circle' | 'triangle'
 
 export type QrStyle = {
@@ -8,11 +10,15 @@ export type QrStyle = {
     centerColor: string
     outerShape: QrModuleShape
     centerShape: QrModuleShape
+    /** Drawn size of the whole mark, as a percentage of its 7x7 module box. */
+    scale: number
   }
   alignment: {
     outerColor: string
     centerColor: string
     shape: QrModuleShape
+    /** Drawn size of the whole mark, as a percentage of its 5x5 module box. */
+    scale: number
   }
   timing: {
     color: string
@@ -29,11 +35,13 @@ export function createDefaultQrStyle(): QrStyle {
       centerColor: '#000000',
       outerShape: 'square',
       centerShape: 'square',
+      scale: DEFAULT_PATTERN_SCALE,
     },
     alignment: {
       outerColor: '#000000',
       centerColor: '#000000',
       shape: 'square',
+      scale: DEFAULT_PATTERN_SCALE,
     },
     timing: {
       color: '#000000',
