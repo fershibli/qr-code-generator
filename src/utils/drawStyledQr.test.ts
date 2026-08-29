@@ -29,7 +29,6 @@ describe('drawStyledQr', () => {
       { resolution: 100, margin: 2, style },
     )
     expect(ctx.fillRect).toHaveBeenCalledWith(0, 0, 100, 100)
-    expect(ctx.fillStyle).toBe('#abcdef')
   })
 
   it('draws dark data modules as squares in the data color', () => {
@@ -44,42 +43,36 @@ describe('drawStyledQr', () => {
       },
       { resolution: 210, margin: 0, style },
     )
-    expect(ctx.fillStyle).toBe('#112233')
     expect(ctx.fillRect).toHaveBeenCalledWith(100, 100, 10, 10)
   })
 
-  it('draws finder outer modules with a circle', () => {
+  it('draws each finder as one concentric circle group', () => {
     const ctx = mockContext()
     const style = createDefaultQrStyle()
     style.finder.outerShape = 'circle'
+    style.finder.centerShape = 'circle'
     style.finder.outerColor = '#ff0000'
     drawStyledQr(
       ctx as unknown as CanvasRenderingContext2D,
-      {
-        size: 21,
-        get: (row, col) => (row === 0 && col === 0 ? 1 : 0),
-      },
+      { size: 21, get: () => 0 },
       { resolution: 210, margin: 0, style },
     )
-    expect(ctx.fillStyle).toBe('#ff0000')
-    expect(ctx.arc).toHaveBeenCalled()
-    expect(ctx.fill).toHaveBeenCalled()
+    expect(ctx.arc).toHaveBeenCalledWith(35, 35, 35, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(35, 35, 25, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(35, 35, 15, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledTimes(9)
   })
 
-  it('draws finder center modules with roundRect when available', () => {
+  it('draws finder pupils with roundRect when the center is rounded', () => {
     const ctx = mockContext()
     const style = createDefaultQrStyle()
     style.finder.centerShape = 'rounded'
     drawStyledQr(
       ctx as unknown as CanvasRenderingContext2D,
-      {
-        size: 21,
-        get: (row, col) => (row === 3 && col === 3 ? 1 : 0),
-      },
+      { size: 21, get: () => 0 },
       { resolution: 210, margin: 0, style },
     )
-    expect(ctx.roundRect).toHaveBeenCalled()
-    expect(ctx.fill).toHaveBeenCalled()
+    expect(ctx.roundRect).toHaveBeenCalledTimes(3)
   })
 
   it('falls back to a path when roundRect is missing', () => {
@@ -88,17 +81,29 @@ describe('drawStyledQr', () => {
     style.finder.centerShape = 'rounded'
     drawStyledQr(
       ctx as unknown as CanvasRenderingContext2D,
-      {
-        size: 21,
-        get: (row, col) => (row === 3 && col === 3 ? 1 : 0),
-      },
+      { size: 21, get: () => 0 },
       { resolution: 210, margin: 0, style },
     )
     expect(ctx.quadraticCurveTo).toHaveBeenCalled()
     expect(ctx.fill).toHaveBeenCalled()
   })
 
-  it('skips light rings even when the matrix bit is set', () => {
+  it('draws triangular finders as a single triangle group', () => {
+    const ctx = mockContext()
+    const style = createDefaultQrStyle()
+    style.finder.outerShape = 'triangle'
+    style.finder.centerShape = 'triangle'
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 0 },
+      { resolution: 210, margin: 0, style },
+    )
+    expect(ctx.moveTo).toHaveBeenCalledWith(35, 0)
+    expect(ctx.lineTo).toHaveBeenCalledWith(70, 70)
+    expect(ctx.lineTo).toHaveBeenCalledWith(0, 70)
+  })
+
+  it('does not paint finder inner rings as data modules', () => {
     const ctx = mockContext()
     drawStyledQr(
       ctx as unknown as CanvasRenderingContext2D,
@@ -108,15 +113,12 @@ describe('drawStyledQr', () => {
       },
       { resolution: 210, margin: 0, style: createDefaultQrStyle() },
     )
-    expect(ctx.fillRect).toHaveBeenCalledTimes(1)
-    expect(ctx.arc).not.toHaveBeenCalled()
+    expect(ctx.fillRect).not.toHaveBeenCalledWith(10, 10, 10, 10)
   })
 
-  it('styles alignment and timing modules on version 2', () => {
+  it('styles alignment as a group and timing modules individually', () => {
     const ctx = mockContext()
     const style = createDefaultQrStyle()
-    style.alignment.outerColor = '#00aa00'
-    style.alignment.centerColor = '#0000aa'
     style.alignment.shape = 'circle'
     style.timing.color = '#aa00aa'
     style.timing.shape = 'circle'
@@ -124,15 +126,11 @@ describe('drawStyledQr', () => {
       ctx as unknown as CanvasRenderingContext2D,
       {
         size: 25,
-        get: (row, col) =>
-          (row === 16 && col === 16) ||
-          (row === 18 && col === 18) ||
-          (row === 6 && col === 10)
-            ? 1
-            : 0,
+        get: (row, col) => (row === 6 && col === 10 ? 1 : 0),
       },
       { resolution: 250, margin: 0, style },
     )
-    expect(ctx.arc).toHaveBeenCalledTimes(3)
+    expect(ctx.arc).toHaveBeenCalled()
+    expect(ctx.arc).toHaveBeenCalledWith(105, 65, 5, 0, Math.PI * 2)
   })
 })

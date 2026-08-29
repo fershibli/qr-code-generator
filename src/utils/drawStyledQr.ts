@@ -1,5 +1,13 @@
 import type { QrModuleShape, QrStyle } from '../qrStyle'
-import { classifyQrModules, type QrModuleKind } from './classifyQrModules'
+import {
+  ALIGNMENT_RADIUS,
+  ALIGNMENT_SIZE,
+  FINDER_SIZE,
+  classifyQrModules,
+  getAlignmentCenters,
+  getFinderOrigins,
+  type QrModuleKind,
+} from './classifyQrModules'
 
 export type QrBitMatrix = {
   size: number
@@ -12,32 +20,31 @@ export type DrawStyledQrOptions = {
   style: QrStyle
 }
 
-function appearanceFor(
-  kind: QrModuleKind,
-  style: QrStyle,
-): { color: string; shape: QrModuleShape } | null {
-  switch (kind) {
-    case 'finderOuter':
-      return { color: style.finder.outerColor, shape: style.finder.outerShape }
-    case 'finderCenter':
-      return {
-        color: style.finder.centerColor,
-        shape: style.finder.centerShape,
-      }
-    case 'alignmentOuter':
-      return { color: style.alignment.outerColor, shape: style.alignment.shape }
-    case 'alignmentCenter':
-      return {
-        color: style.alignment.centerColor,
-        shape: style.alignment.shape,
-      }
-    case 'timing':
-      return { color: style.timing.color, shape: style.timing.shape }
-    case 'data':
-      return { color: style.dataColor, shape: 'square' }
-    default:
-      return null
-  }
+const GROUPED_KINDS = new Set<QrModuleKind>([
+  'finderOuter',
+  'finderInner',
+  'finderCenter',
+  'alignmentOuter',
+  'alignmentInner',
+  'alignmentCenter',
+  'separator',
+])
+
+type ModuleBox = { x: number; y: number; w: number; h: number }
+
+function moduleBox(
+  row: number,
+  col: number,
+  modules: number,
+  margin: number,
+  moduleCount: number,
+  resolution: number,
+): ModuleBox {
+  const x0 = ((col + margin) / moduleCount) * resolution
+  const y0 = ((row + margin) / moduleCount) * resolution
+  const x1 = ((col + margin + modules) / moduleCount) * resolution
+  const y1 = ((row + margin + modules) / moduleCount) * resolution
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
 }
 
 function fillRoundedRect(
@@ -67,25 +74,93 @@ function fillRoundedRect(
   ctx.fill()
 }
 
-function drawModule(
+function fillShape(
   ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
+  box: ModuleBox,
   shape: QrModuleShape,
 ) {
   if (shape === 'square') {
-    ctx.fillRect(x, y, width, height)
+    ctx.fillRect(box.x, box.y, box.w, box.h)
     return
   }
   if (shape === 'circle') {
     ctx.beginPath()
-    ctx.arc(x + width / 2, y + height / 2, Math.min(width, height) / 2, 0, Math.PI * 2)
+    ctx.arc(
+      box.x + box.w / 2,
+      box.y + box.h / 2,
+      Math.min(box.w, box.h) / 2,
+      0,
+      Math.PI * 2,
+    )
     ctx.fill()
     return
   }
-  fillRoundedRect(ctx, x, y, width, height, Math.min(width, height) * 0.35)
+  if (shape === 'triangle') {
+    ctx.beginPath()
+    ctx.moveTo(box.x + box.w / 2, box.y)
+    ctx.lineTo(box.x + box.w, box.y + box.h)
+    ctx.lineTo(box.x, box.y + box.h)
+    ctx.closePath()
+    ctx.fill()
+    return
+  }
+  fillRoundedRect(
+    ctx,
+    box.x,
+    box.y,
+    box.w,
+    box.h,
+    Math.min(box.w, box.h) * 0.22,
+  )
+}
+
+function drawPatternGroup(
+  ctx: CanvasRenderingContext2D,
+  originRow: number,
+  originCol: number,
+  sizeModules: number,
+  outerShape: QrModuleShape,
+  centerShape: QrModuleShape,
+  outerColor: string,
+  centerColor: string,
+  quietZoneColor: string,
+  margin: number,
+  moduleCount: number,
+  resolution: number,
+) {
+  const pupilModules = sizeModules === FINDER_SIZE ? 3 : 1
+  const pupilInset = (sizeModules - pupilModules) / 2
+  const outer = moduleBox(
+    originRow,
+    originCol,
+    sizeModules,
+    margin,
+    moduleCount,
+    resolution,
+  )
+  const hole = moduleBox(
+    originRow + 1,
+    originCol + 1,
+    sizeModules - 2,
+    margin,
+    moduleCount,
+    resolution,
+  )
+  const pupil = moduleBox(
+    originRow + pupilInset,
+    originCol + pupilInset,
+    pupilModules,
+    margin,
+    moduleCount,
+    resolution,
+  )
+
+  ctx.fillStyle = outerColor
+  fillShape(ctx, outer, outerShape)
+  ctx.fillStyle = quietZoneColor
+  fillShape(ctx, hole, outerShape)
+  ctx.fillStyle = centerColor
+  fillShape(ctx, pupil, centerShape)
 }
 
 export function drawStyledQr(
@@ -104,17 +179,56 @@ export function drawStyledQr(
     for (let col = 0; col < size; col += 1) {
       if (!matrix.get(row, col)) continue
       const kind = kinds[row]?.[col]
-      if (!kind) continue
-      const appearance = appearanceFor(kind, style)
-      if (!appearance) continue
+      if (!kind || GROUPED_KINDS.has(kind)) continue
 
       const x0 = ((col + margin) / moduleCount) * resolution
       const y0 = ((row + margin) / moduleCount) * resolution
       const x1 = ((col + margin + 1) / moduleCount) * resolution
       const y1 = ((row + margin + 1) / moduleCount) * resolution
+      const box = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
 
-      ctx.fillStyle = appearance.color
-      drawModule(ctx, x0, y0, x1 - x0, y1 - y0, appearance.shape)
+      if (kind === 'timing') {
+        ctx.fillStyle = style.timing.color
+        fillShape(ctx, box, style.timing.shape)
+        continue
+      }
+
+      ctx.fillStyle = style.dataColor
+      fillShape(ctx, box, 'square')
     }
+  }
+
+  for (const [originRow, originCol] of getFinderOrigins(size)) {
+    drawPatternGroup(
+      ctx,
+      originRow,
+      originCol,
+      FINDER_SIZE,
+      style.finder.outerShape,
+      style.finder.centerShape,
+      style.finder.outerColor,
+      style.finder.centerColor,
+      style.quietZoneColor,
+      margin,
+      moduleCount,
+      resolution,
+    )
+  }
+
+  for (const [centerRow, centerCol] of getAlignmentCenters(size)) {
+    drawPatternGroup(
+      ctx,
+      centerRow - ALIGNMENT_RADIUS,
+      centerCol - ALIGNMENT_RADIUS,
+      ALIGNMENT_SIZE,
+      style.alignment.shape,
+      style.alignment.shape,
+      style.alignment.outerColor,
+      style.alignment.centerColor,
+      style.quietZoneColor,
+      margin,
+      moduleCount,
+      resolution,
+    )
   }
 }

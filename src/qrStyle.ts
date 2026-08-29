@@ -1,4 +1,4 @@
-export type QrModuleShape = 'square' | 'rounded' | 'circle'
+export type QrModuleShape = 'square' | 'rounded' | 'circle' | 'triangle'
 
 export type QrStyle = {
   quietZoneColor: string

@@ -9,8 +9,9 @@ export type QrModuleKind =
   | 'separator'
   | 'data'
 
-const FINDER_SIZE = 7
-const ALIGNMENT_RADIUS = 2
+export const FINDER_SIZE = 7
+export const ALIGNMENT_RADIUS = 2
+export const ALIGNMENT_SIZE = ALIGNMENT_RADIUS * 2 + 1
 
 function versionFromSize(size: number): number {
   return (size - 17) / 4
@@ -22,6 +23,14 @@ function finderOrigins(size: number): Array<[number, number]> {
     [size - FINDER_SIZE, 0],
     [0, size - FINDER_SIZE],
   ]
+}
+
+export function getFinderOrigins(size: number): Array<[number, number]> {
+  return finderOrigins(size)
+}
+
+export function getAlignmentCenters(size: number): Array<[number, number]> {
+  return alignmentCenters(versionFromSize(size), size)
 }
 
 function alignmentCenters(version: number, size: number): Array<[number, number]> {
