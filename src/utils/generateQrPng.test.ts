@@ -97,7 +97,7 @@ describe('generateQrPng', () => {
       this: HTMLCanvasElement,
       ...args: Parameters<HTMLCanvasElement['getContext']>
     ) {
-      const ctx = original.apply(this, args)
+      const ctx = original.apply(this, args) as CanvasRenderingContext2D | null
       if (ctx) {
         ctx.fillRect = fillRect
       }

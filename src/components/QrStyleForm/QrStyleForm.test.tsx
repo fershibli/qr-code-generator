@@ -106,8 +106,10 @@ describe('QrStyleForm', () => {
     await user.click(screen.getByRole('combobox', { name: 'Timing shape' }))
     await user.click(await screen.findByRole('option', { name: 'Rounded' }))
 
-    expect(props.onStyleChange).toHaveBeenCalled()
-    const last = props.onStyleChange.mock.calls.at(-1)?.[0]
-    expect(last.timing.shape).toBe('rounded')
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timing: expect.objectContaining({ shape: 'rounded' }),
+      }),
+    )
   })
 })
