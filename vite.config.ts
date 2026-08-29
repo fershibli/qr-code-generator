@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -8,10 +9,22 @@ const packageJson = JSON.parse(
   readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'),
 ) as { version: string }
 
+function appVersion(): string {
+  try {
+    return execSync('git describe --tags --match v[0-9]* --abbrev=0', {
+      encoding: 'utf8',
+    })
+      .trim()
+      .replace(/^v/, '')
+  } catch {
+    return packageJson.version
+  }
+}
+
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   define: {
-    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __APP_VERSION__: JSON.stringify(appVersion()),
   },
   plugins: [react()],
   test: {

@@ -153,8 +153,8 @@ Pull requests must keep coverage at or above 80% and the Storybook build must su
 
 Pushes to `main`:
 
-1. **GitHub Pages** — `.github/workflows/pages.yml` builds with `BASE_PATH=/qr-code-generator/` and publishes `dist`.
-2. **Release** — `.github/workflows/release.yml` runs [semantic-release](https://semantic-release.gitbook.io/) when commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat` → minor, `fix` → patch, `BREAKING CHANGE` → major).
+1. **GitHub Pages** — `.github/workflows/pages.yml` builds with `BASE_PATH=/qr-code-generator/` and publishes `dist`. It also rebuilds when a GitHub Release is published, so the footer can show the new tag.
+2. **Release** — `.github/workflows/release.yml` runs [semantic-release](https://semantic-release.gitbook.io/) when commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat` → minor, `fix` → patch, `BREAKING CHANGE` → major). It creates a GitHub Release and git tag via the API (it does not push a version commit to `main`, which would be blocked by the required **Test** check).
 
 Pull requests run `.github/workflows/test.yml` (`npm run test:coverage` and `npm run build-storybook`). The **Test** check is required on `main`.
 
