@@ -234,7 +234,7 @@ export function QrStyleForm({
 
       <FormSection
         title="Contour"
-        description="Fills the space around the code with copies of its own pixels, with no position or alignment marks, clipped to the chosen outline. The code keeps a four-module quiet zone and shrinks to make room."
+        description="Fills the space around the code with copies of its own pixels, with no position or alignment marks, clipped to the chosen outline. QR margin sets the gap between the two: at 0 the fill starts right at the code."
       >
         <FormControlLabel
           sx={{ mr: 0 }}

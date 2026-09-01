@@ -14,6 +14,7 @@ export const DEFAULT_LOGO_PADDING = 5
 export const MIN_LOGO_PADDING = 0
 export const MAX_LOGO_PADDING = 25
 export const MAX_RECENT_LOGOS = 8
+export const DEFAULT_URL_SCHEME = 'https://'
 
 export const MIN_QR_VERSION = 1
 export const MAX_QR_VERSION = 40
@@ -22,8 +23,6 @@ export const DEFAULT_MIN_QR_VERSION = MIN_QR_VERSION
 export const MIN_CONTOUR_WIDTH = 1
 export const MAX_CONTOUR_WIDTH = 16
 export const DEFAULT_CONTOUR_WIDTH = 6
-/** Modules of empty quiet zone kept between the code and the contour fill. */
-export const MIN_CONTOUR_GAP_MODULES = 4
 
 export const MIN_PATTERN_SCALE = 60
 export const MAX_PATTERN_SCALE = 140

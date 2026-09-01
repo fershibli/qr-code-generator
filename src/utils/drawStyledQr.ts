@@ -1,4 +1,3 @@
-import { MIN_CONTOUR_GAP_MODULES } from '../constants'
 import type { QrContourShape, QrModuleShape, QrStyle } from '../qrStyle'
 import {
   ALIGNMENT_RADIUS,
@@ -226,8 +225,8 @@ function clipToContour(
  * Fills the band around the code with copies of its own data modules, tiled on
  * the same lattice and clipped to the contour shape. Function patterns are left
  * out on purpose: only "pixels" repeat, so no second set of finders competes
- * with the real ones, and a quiet gap of at least
- * {@link MIN_CONTOUR_GAP_MODULES} modules is kept around the code.
+ * with the real ones. The gap between the code and the fill is the QR margin,
+ * so setting that to zero makes the fill start right at the code.
  */
 function drawContourFill(
   ctx: CanvasRenderingContext2D,
@@ -270,16 +269,12 @@ export function drawStyledQr(
   const { size } = matrix
   const kinds = classifyQrModules(size)
   const contourWidth = style.contour.enabled ? style.contour.width : 0
-  // The fill starts outside a full quiet zone, so it never crowds the code.
-  const quietZone = style.contour.enabled
-    ? Math.max(margin, MIN_CONTOUR_GAP_MODULES)
-    : margin
-  const step = resolution / (size + (quietZone + contourWidth) * 2)
+  const step = resolution / (size + (margin + contourWidth) * 2)
   const grid: ModuleGrid = {
     origin: contourWidth * step,
-    size: (size + quietZone * 2) * step,
-    margin: quietZone,
-    moduleCount: size + quietZone * 2,
+    size: (size + margin * 2) * step,
+    margin,
+    moduleCount: size + margin * 2,
   }
 
   ctx.fillStyle = style.quietZoneColor

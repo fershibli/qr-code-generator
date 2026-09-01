@@ -18,6 +18,7 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 ## Features
 
 - Encode any URL into a square PNG QR code (no alpha channel).
+- URL field pre-filled with `https://` and checked locally when you leave it — green when valid, red with a reason when not.
 - **Module density**: force a minimum QR version (automatic through 40) to pack more, smaller squares into the same URL. The preview caption reports the version and module count that were actually encoded.
 - Optional centered logo, with size and padding sliders that appear only after a logo is selected.
 - Collapsible **Customize style** controls for quiet-zone, data, finder, alignment, and timing colors and shapes. Finder and alignment shapes apply to the whole pattern (square, rounded, circle, or triangle), not each module.
@@ -27,6 +28,7 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 - Optional transparent logo backing so QR modules show through around the logo (the PNG stays opaque RGB). The switch is on the form, below the logo upload, and only appears after a logo is selected.
 - Adjustable quiet-zone margin (0–10 modules).
 - Export resolution from 250×250 through 1750×1750 px, in 250 px steps.
+- Downloads named after the encoded URL, such as `a.com.br-500px.png`.
 - Live preview always shown at 500×500 CSS pixels; download uses the selected resolution.
 - Light and dark theme, following the system by default or a stored preference.
 - Last 8 logos cached in IndexedDB for one-click reuse (removing the current logo does not clear the cache).
@@ -44,7 +46,9 @@ The left card is the form. The right card stays empty until a URL is entered; **
 
 ### 2. Enter a URL
 
-Type a full URL including `https://` so scanners open the link. The preview updates after a short debounce.
+The field starts out holding `https://`, so you only type the rest. The preview updates after a short debounce, and nothing is generated while the field still holds the scheme alone.
+
+Leaving the field checks the address locally — no request is made. A valid one is confirmed in green (`Valid URL — points to a.com.br.`); a bad one turns the field red with the reason: a missing scheme, spaces, a host with no domain ending, or a malformed domain. Once checked, the message follows what you type, so a fix clears it straight away. Other schemes such as `mailto:` are accepted with a note that scanners may not open them as a web page.
 
 ![Generated QR code for the project GitHub URL](docs/screenshots/generated.png)
 
@@ -78,8 +82,9 @@ Resizing the position marks is the one setting here that breaks scanning — see
 - **Contour shape** is the outline the fill is clipped to: circle, square, rounded square, or diamond.
 - **Contour module shape** and **Contour color** style the repeated pixels.
 - **Contour width** is how many modules the band adds on each side (1–16). A round outline needs a wide band — roughly 8 modules or more — before it can enclose the whole code.
+- **QR margin**, back in **Output**, is the gap between the code and the band. Set it to 0 to have them touch.
 
-The code keeps a quiet zone of at least four modules from the fill and shrinks to make room for the band, so the exported PNG stays the resolution you picked. A centered logo shrinks with the code, keeping the same share of it.
+**QR margin** doubles as the gap between the code and the fill: at 0 the band starts right at the code, so the two read as one field of pixels. The code shrinks to make room for the band, so the exported PNG stays the resolution you picked, and a centered logo shrinks with the code, keeping the same share of it.
 
 ### 6. Optionally add a logo
 
@@ -87,7 +92,7 @@ The code keeps a quiet zone of at least four modules from the fill and shrinks t
 
 ![QR code with a centered logo, size and padding sliders, and recent logos](docs/screenshots/with-logo.png)
 
-Click **Download** to save `qr-code-{n}x{n}.png`. Removing the current logo does not delete it from recents.
+Click **Download** to save the PNG. The file is named after the URL it encodes plus the export size — `https://a.com.br` at 500×500 saves as `a.com.br-500px.png`. The scheme, `www.`, and any trailing slash are dropped, accents are folded, anything else unsafe for a file name becomes a dash, and a URL that leaves nothing usable falls back to `qr-code`. Removing the current logo does not delete it from recents.
 
 ### 7. Switch light and dark mode
 
@@ -105,11 +110,12 @@ Every option here was checked by generating the PNG in the running app (Playwrig
 | Module density, up to version 40 | ✅ |
 | Contour fill, any outline or width | ✅ |
 | Alignment pattern size, 60–140% | ✅ |
+| Contour gap (QR margin), 0–6 modules | ✅ |
 | Position pattern size, anything but 100% | ❌ at every step from 60% to 140% |
 
 Scanners derive the module size from the three position patterns, so a mark drawn larger or smaller than its 7×7 box makes the decoder sample the grid at the wrong pitch. The control is still there — other generators offer it too — but the style form shows a warning while it is off 100%, and codes made that way should be tested on a real scanner before being published.
 
-The contour fill is safe because it never repeats a function pattern and never comes closer than four modules to the code.
+The contour fill never repeats a function pattern, which is what keeps it from competing with the real position marks. The gap between the code and the fill is yours to set: decoding held at every QR margin from 0 to 6 modules, including 0, where the fill touches the code. Four modules is still what the spec asks for, so keep the margin up if the code is going to print or be scanned from a distance.
 
 ## Architecture
 

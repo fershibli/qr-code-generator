@@ -26,6 +26,7 @@ import {
   type Resolution,
 } from '../../constants'
 import type { QrStyle } from '../../qrStyle'
+import { checkUrl } from '../../utils/urlValidation'
 import { FormSection, SelectField, SliderField } from '../FormFields'
 import { LogoUpload } from '../LogoUpload'
 import { QrStyleForm } from '../QrStyleForm'
@@ -81,6 +82,11 @@ export function QrForm({
   onStyleReset,
 }: QrFormProps) {
   const [styleOpen, setStyleOpen] = useState(false)
+  const [urlTouched, setUrlTouched] = useState(false)
+  // Checked once the field has been left, then on every edit so a fix clears
+  // the message straight away.
+  const urlCheck = checkUrl(url)
+  const showUrlCheck = urlTouched && urlCheck.status !== 'empty'
   const densityModules = modulesForVersion(minVersion)
   const densityLabel =
     minVersion > MIN_QR_VERSION
@@ -122,8 +128,20 @@ export function QrForm({
               fullWidth
               value={url}
               onChange={(event) => onUrlChange(event.target.value)}
+              onBlur={() => setUrlTouched(true)}
               placeholder="https://example.com"
-              helperText="Include https:// so scanners open the link."
+              error={showUrlCheck && urlCheck.status === 'invalid'}
+              helperText={
+                showUrlCheck
+                  ? urlCheck.message
+                  : 'Include https:// so scanners open the link.'
+              }
+              slotProps={{
+                formHelperText:
+                  showUrlCheck && urlCheck.status === 'valid'
+                    ? { sx: { color: 'success.main' } }
+                    : undefined,
+              }}
             />
           </FormSection>
 
@@ -203,7 +221,7 @@ export function QrForm({
                 { value: DEFAULT_QR_MARGIN, label: `${DEFAULT_QR_MARGIN}` },
                 { value: MAX_QR_MARGIN, label: `${MAX_QR_MARGIN}` },
               ]}
-              helperText="Quiet zone around the QR code, in modules."
+              helperText="Quiet zone around the QR code, in modules. With a contour on, this is also the gap before the fill starts."
               onChange={onMarginChange}
             />
             <SliderField

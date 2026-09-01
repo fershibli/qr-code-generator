@@ -227,11 +227,11 @@ describe('generateQrPng', () => {
       style,
     })
 
-    // 21 modules + 4 quiet + 6 contour per side => the code is 29/41 of 250 px,
-    // so a 20% logo with 10% padding is 42.4 px instead of 60 px.
+    // 21 modules + 2 margin + 6 contour per side => the code is 25/37 of
+    // 250 px, so a 20% logo with 10% padding is 40.5 px instead of 60 px.
     const backing = fillRect.mock.calls.at(-1) as number[]
-    expect(backing[2]).toBeCloseTo(42.44, 1)
-    expect(backing[0]).toBeCloseTo(103.78, 1)
+    expect(backing[2]).toBeCloseTo(40.54, 1)
+    expect(backing[0]).toBeCloseTo(104.73, 1)
 
     HTMLCanvasElement.prototype.getContext = original
   })

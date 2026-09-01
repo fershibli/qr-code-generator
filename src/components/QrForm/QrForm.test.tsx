@@ -14,10 +14,8 @@ const file = new File([new Uint8Array([1, 2, 3])], 'logo.png', {
   type: 'image/png',
 })
 
-function renderForm(
-  overrides: Partial<Parameters<typeof QrForm>[0]> = {},
-) {
-  const props = {
+function formProps(overrides: Partial<Parameters<typeof QrForm>[0]> = {}) {
+  return {
     url: '',
     onUrlChange: vi.fn(),
     logoFile: null as File | null,
@@ -40,6 +38,12 @@ function renderForm(
     onStyleReset: vi.fn(),
     ...overrides,
   }
+}
+
+function renderForm(
+  overrides: Partial<Parameters<typeof QrForm>[0]> = {},
+) {
+  const props = formProps(overrides)
   return { ...renderWithTheme(<QrForm {...props} />), props }
 }
 
@@ -103,6 +107,47 @@ describe('QrForm', () => {
     expect(screen.queryByText('Quiet zone color')).not.toBeInTheDocument()
     await user.click(toggle)
     expect(props.onLogoTransparentBackgroundChange).toHaveBeenCalledWith(true)
+  })
+
+  it('keeps the neutral hint until the URL field is left', async () => {
+    const user = userEvent.setup()
+    renderForm({ url: 'not-a-url' })
+    expect(
+      screen.getByText('Include https:// so scanners open the link.'),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('textbox', { name: /URL/ }))
+    await user.tab()
+    expect(
+      screen.getByText('Start with a scheme, such as https://example.com.'),
+    ).toBeInTheDocument()
+  })
+
+  it('marks a bad URL as an error and a good one as valid', async () => {
+    const user = userEvent.setup()
+    const { rerender } = renderForm({ url: 'https://exa mple.com' })
+    await user.click(screen.getByRole('textbox', { name: /URL/ }))
+    await user.tab()
+
+    const message = screen.getByText('A URL cannot contain spaces.')
+    expect(message).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /URL/ })).toBeInvalid()
+
+    rerender(<QrForm {...formProps({ url: 'https://a.com.br' })} />)
+    expect(
+      screen.getByText('Valid URL — points to a.com.br.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /URL/ })).toBeValid()
+  })
+
+  it('says nothing while the field holds only the scheme', async () => {
+    const user = userEvent.setup()
+    renderForm({ url: 'https://' })
+    await user.click(screen.getByRole('textbox', { name: /URL/ }))
+    await user.tab()
+    expect(
+      screen.getByText('Include https:// so scanners open the link.'),
+    ).toBeInTheDocument()
   })
 
   it('labels the density slider as automatic by default', () => {
