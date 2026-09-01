@@ -16,6 +16,17 @@ vi.mock('./utils/generateQrPng', () => ({
   })),
 }))
 
+/** The field starts holding the scheme, so tests replace it outright. */
+async function typeUrl(
+  user: ReturnType<typeof userEvent.setup>,
+  value: string,
+) {
+  const input = screen.getByRole('textbox', { name: /URL/ })
+  await user.clear(input)
+  await user.type(input, value)
+  return input
+}
+
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -50,7 +61,7 @@ describe('App', () => {
     expect(
       screen.getByRole('heading', { name: 'QR Code Generator' }),
     ).toBeInTheDocument()
-    await user.type(screen.getByRole('textbox', { name: /URL/ }), 'https://example.com')
+    await typeUrl(user, 'https://example.com')
     await waitFor(() => {
       expect(generateQrPng).toHaveBeenCalled()
     })
@@ -70,6 +81,25 @@ describe('App', () => {
     click.mockRestore()
   })
 
+  it('starts with the scheme and waits for a destination', async () => {
+    const user = userEvent.setup()
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    expect(screen.getByRole('textbox', { name: /URL/ })).toHaveValue('https://')
+    expect(
+      screen.getByText('Enter a URL to generate a QR code.'),
+    ).toBeInTheDocument()
+
+    // Nothing to encode yet, so nothing is generated.
+    await waitFor(() => expect(generateQrPng).not.toHaveBeenCalled())
+
+    await typeUrl(user, 'https://example.com')
+    await waitFor(() => expect(generateQrPng).toHaveBeenCalledTimes(1))
+  })
+
   it('shows a generation error', async () => {
     const user = userEvent.setup()
     vi.mocked(generateQrPng).mockRejectedValueOnce(new Error('boom'))
@@ -78,7 +108,7 @@ describe('App', () => {
         <App />
       </ColorModeProvider>,
     )
-    await user.type(screen.getByRole('textbox', { name: /URL/ }), 'https://bad.example')
+    await typeUrl(user, 'https://bad.example')
     await waitFor(() => {
       expect(screen.getByText('boom')).toBeInTheDocument()
     })
@@ -92,7 +122,7 @@ describe('App', () => {
         <App />
       </ColorModeProvider>,
     )
-    await user.type(screen.getByRole('textbox', { name: /URL/ }), 'https://fail.example')
+    await typeUrl(user, 'https://fail.example')
     await waitFor(() => {
       expect(screen.getByText('Failed to generate QR code')).toBeInTheDocument()
     })
@@ -150,8 +180,7 @@ describe('App', () => {
         <App />
       </ColorModeProvider>,
     )
-    const input = screen.getByRole('textbox', { name: /URL/ })
-    await user.type(input, 'https://first.example')
+    const input = await typeUrl(user, 'https://first.example')
     await waitFor(() => expect(generateQrPng).toHaveBeenCalledTimes(1))
     await user.clear(input)
     await user.type(input, 'https://second.example')
@@ -179,10 +208,7 @@ describe('App', () => {
         <App />
       </ColorModeProvider>,
     )
-    await user.type(
-      screen.getByRole('textbox', { name: /URL/ }),
-      'https://stale.example',
-    )
+    await typeUrl(user, 'https://stale.example')
     await waitFor(() => expect(generateQrPng).toHaveBeenCalledTimes(1))
     unmount()
     rejectFirst?.(new Error('stale'))

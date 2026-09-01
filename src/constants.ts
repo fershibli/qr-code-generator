@@ -14,6 +14,7 @@ export const DEFAULT_LOGO_PADDING = 5
 export const MIN_LOGO_PADDING = 0
 export const MAX_LOGO_PADDING = 25
 export const MAX_RECENT_LOGOS = 8
+export const DEFAULT_URL_SCHEME = 'https://'
 
 export const MIN_QR_VERSION = 1
 export const MAX_QR_VERSION = 40

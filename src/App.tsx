@@ -8,6 +8,7 @@ import { QrPreview } from './components/QrPreview'
 import { ColorModeToggle } from './components/ColorModeToggle'
 import { AppFooter } from './components/AppFooter'
 import {
+  DEFAULT_URL_SCHEME,
   DEFAULT_LOGO_PADDING,
   DEFAULT_LOGO_SIZE,
   DEFAULT_MIN_QR_VERSION,
@@ -18,6 +19,7 @@ import {
 import { createDefaultQrStyle, type QrStyle } from './qrStyle'
 import { generateQrPng } from './utils/generateQrPng'
 import { buildQrFileName } from './utils/qrFileName'
+import { checkUrl } from './utils/urlValidation'
 
 function downloadBlob(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob)
@@ -29,7 +31,7 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function App() {
-  const [url, setUrl] = useState('')
+  const [url, setUrl] = useState(DEFAULT_URL_SCHEME)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const [size, setSize] = useState(DEFAULT_LOGO_SIZE)
@@ -49,7 +51,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const trimmedUrl = url.trim()
+  // The field starts holding the scheme, which is not something to encode yet.
+  const trimmedUrl = checkUrl(url).status === 'empty' ? '' : url.trim()
 
   function handleLogoChange(file: File | null) {
     setLogoPreviewUrl((previous) => {
