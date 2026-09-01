@@ -18,6 +18,7 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 ## Features
 
 - Encode any URL into a square PNG QR code (no alpha channel).
+- URL field pre-filled with `https://` and checked locally when you leave it — green when valid, red with a reason when not.
 - **Module density**: force a minimum QR version (automatic through 40) to pack more, smaller squares into the same URL. The preview caption reports the version and module count that were actually encoded.
 - Optional centered logo, with size and padding sliders that appear only after a logo is selected.
 - Collapsible **Customize style** controls for quiet-zone, data, finder, alignment, and timing colors and shapes. Finder and alignment shapes apply to the whole pattern (square, rounded, circle, or triangle), not each module.
@@ -45,7 +46,9 @@ The left card is the form. The right card stays empty until a URL is entered; **
 
 ### 2. Enter a URL
 
-Type a full URL including `https://` so scanners open the link. The preview updates after a short debounce.
+The field starts out holding `https://`, so you only type the rest. The preview updates after a short debounce, and nothing is generated while the field still holds the scheme alone.
+
+Leaving the field checks the address locally — no request is made. A valid one is confirmed in green (`Valid URL — points to a.com.br.`); a bad one turns the field red with the reason: a missing scheme, spaces, a host with no domain ending, or a malformed domain. Once checked, the message follows what you type, so a fix clears it straight away. Other schemes such as `mailto:` are accepted with a note that scanners may not open them as a web page.
 
 ![Generated QR code for the project GitHub URL](docs/screenshots/generated.png)
 
