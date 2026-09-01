@@ -5,6 +5,11 @@ import { createDefaultQrStyle } from '../../qrStyle'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { QrStyleForm } from './QrStyleForm'
 
+/** Fields render their label and current value as siblings in one row. */
+function labelRow(label: string) {
+  return screen.getByText(label).parentElement
+}
+
 function renderStyle(
   overrides: Partial<Parameters<typeof QrStyleForm>[0]> = {},
 ) {
@@ -69,10 +74,69 @@ describe('QrStyleForm', () => {
         finder: { ...createDefaultQrStyle().finder, scale: 130 },
       },
     })
-    expect(screen.getByText('Position pattern size (130%)')).toBeInTheDocument()
+    expect(labelRow('Position pattern size')).toHaveTextContent('130%')
+    expect(labelRow('Alignment pattern size')).toHaveTextContent('100%')
+  })
+
+  it('hides the contour controls until the switch is on', async () => {
+    const user = userEvent.setup()
+    const { props } = renderStyle()
     expect(
-      screen.getByText('Alignment pattern size (100%)'),
-    ).toBeInTheDocument()
+      screen.queryByRole('combobox', { name: 'Contour shape' }),
+    ).not.toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole('switch', { name: 'Fill a contour around the code' }),
+    )
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ enabled: true }),
+      }),
+    )
+  })
+
+  it('edits the contour outline, module shape, color, and width', async () => {
+    const user = userEvent.setup()
+    const style = createDefaultQrStyle()
+    style.contour = { ...style.contour, enabled: true }
+    const { props } = renderStyle({ style })
+
+    expect(labelRow('Contour width')).toHaveTextContent('6 modules')
+
+    await user.click(screen.getByRole('combobox', { name: 'Contour shape' }))
+    await user.click(await screen.findByRole('option', { name: 'Diamond' }))
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ shape: 'diamond' }),
+      }),
+    )
+
+    await user.click(
+      screen.getByRole('combobox', { name: 'Contour module shape' }),
+    )
+    await user.click(await screen.findByRole('option', { name: 'Circle' }))
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ moduleShape: 'circle' }),
+      }),
+    )
+
+    fireEvent.change(screen.getByLabelText('Contour color'), {
+      target: { value: '#6a0dad' },
+    })
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ color: '#6a0dad' }),
+      }),
+    )
+
+    screen.getByRole('slider', { name: 'Contour width' }).focus()
+    await user.keyboard('{ArrowRight}')
+    expect(props.onStyleChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contour: expect.objectContaining({ width: 7 }),
+      }),
+    )
   })
 
   it('resets style to the defaults', async () => {
@@ -112,7 +176,8 @@ describe('QrStyleForm', () => {
     fireEvent.change(hex, { target: { value: '#fff' } })
     expect(props.onStyleChange).not.toHaveBeenCalled()
     fireEvent.blur(hex)
-    expect(hex).toHaveValue('#ffffff')
+    // The field shows the digits only; the # is a fixed adornment.
+    expect(hex).toHaveValue('ffffff')
   })
 
   it('updates finder, alignment, and timing colors and shapes', async () => {

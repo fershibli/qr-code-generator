@@ -5,6 +5,11 @@ import { createDefaultQrStyle } from '../../qrStyle'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { QrForm } from './QrForm'
 
+/** Fields render their label and current value as siblings in one row. */
+function labelRow(label: string) {
+  return screen.getByText(label).parentElement
+}
+
 const file = new File([new Uint8Array([1, 2, 3])], 'logo.png', {
   type: 'image/png',
 })
@@ -51,8 +56,8 @@ describe('QrForm', () => {
       logoFile: file,
       logoPreviewUrl: 'blob:logo',
     })
-    expect(screen.getByText('Logo size (20%)')).toBeInTheDocument()
-    expect(screen.getByText('Logo padding (5%)')).toBeInTheDocument()
+    expect(labelRow('Logo size')).toHaveTextContent('20%')
+    expect(labelRow('Logo padding')).toHaveTextContent('5%')
   })
 
   it('notifies parent when the URL changes', async () => {
@@ -102,14 +107,14 @@ describe('QrForm', () => {
 
   it('labels the density slider as automatic by default', () => {
     renderForm()
-    expect(screen.getByText('Module density (automatic)')).toBeInTheDocument()
+    expect(labelRow('Module density')).toHaveTextContent('automatic')
   })
 
   it('labels a forced version with its module count', () => {
     renderForm({ minVersion: 10 })
-    expect(
-      screen.getByText('Module density (version 10, 57×57 modules)'),
-    ).toBeInTheDocument()
+    expect(labelRow('Module density')).toHaveTextContent(
+      'version 10, 57×57 modules',
+    )
   })
 
   it('notifies parent when the density slider changes', async () => {

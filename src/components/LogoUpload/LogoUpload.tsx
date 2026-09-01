@@ -43,7 +43,6 @@ export function LogoUpload({ file, previewUrl, onChange }: LogoUploadProps) {
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2">Logo (optional)</Typography>
       <input
         ref={inputRef}
         type="file"

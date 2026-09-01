@@ -1,4 +1,5 @@
-import type { QrModuleShape, QrStyle } from '../qrStyle'
+import { MIN_CONTOUR_GAP_MODULES } from '../constants'
+import type { QrContourShape, QrModuleShape, QrStyle } from '../qrStyle'
 import {
   ALIGNMENT_RADIUS,
   ALIGNMENT_SIZE,
@@ -20,6 +21,12 @@ export type DrawStyledQrOptions = {
   style: QrStyle
 }
 
+/** Square the code itself occupies on the canvas, in pixels. */
+export type QrCoreBox = {
+  origin: number
+  size: number
+}
+
 const GROUPED_KINDS = new Set<QrModuleKind>([
   'finderOuter',
   'finderInner',
@@ -31,6 +38,30 @@ const GROUPED_KINDS = new Set<QrModuleKind>([
 ])
 
 type ModuleBox = { x: number; y: number; w: number; h: number }
+
+/**
+ * Placement of the module lattice on the canvas: the code plus its quiet zone
+ * fills a `size` square starting at `origin`, and the contour fill reuses the
+ * same lattice outside it.
+ */
+type ModuleGrid = {
+  origin: number
+  size: number
+  margin: number
+  moduleCount: number
+}
+
+function moduleBox(
+  grid: ModuleGrid,
+  row: number,
+  col: number,
+  modules = 1,
+): ModuleBox {
+  const step = grid.size / grid.moduleCount
+  const x = grid.origin + (col + grid.margin) * step
+  const y = grid.origin + (row + grid.margin) * step
+  return { x, y, w: step * modules, h: step * modules }
+}
 
 /** Grows or shrinks a box around a fixed center point. */
 function scaleBox(
@@ -48,22 +79,7 @@ function scaleBox(
   }
 }
 
-function moduleBox(
-  row: number,
-  col: number,
-  modules: number,
-  margin: number,
-  moduleCount: number,
-  resolution: number,
-): ModuleBox {
-  const x0 = ((col + margin) / moduleCount) * resolution
-  const y0 = ((row + margin) / moduleCount) * resolution
-  const x1 = ((col + margin + modules) / moduleCount) * resolution
-  const y1 = ((row + margin + modules) / moduleCount) * resolution
-  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
-}
-
-function fillRoundedRect(
+function traceRoundedRect(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -75,19 +91,18 @@ function fillRoundedRect(
   ctx.beginPath()
   if (typeof ctx.roundRect === 'function') {
     ctx.roundRect(x, y, width, height, r)
-  } else {
-    ctx.moveTo(x + r, y)
-    ctx.lineTo(x + width - r, y)
-    ctx.quadraticCurveTo(x + width, y, x + width, y + r)
-    ctx.lineTo(x + width, y + height - r)
-    ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
-    ctx.lineTo(x + r, y + height)
-    ctx.quadraticCurveTo(x, y + height, x, y + height - r)
-    ctx.lineTo(x, y + r)
-    ctx.quadraticCurveTo(x, y, x + r, y)
-    ctx.closePath()
+    return
   }
-  ctx.fill()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + width - r, y)
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r)
+  ctx.lineTo(x + width, y + height - r)
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height)
+  ctx.lineTo(x + r, y + height)
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r)
+  ctx.lineTo(x, y + r)
+  ctx.quadraticCurveTo(x, y, x + r, y)
+  ctx.closePath()
 }
 
 function fillShape(
@@ -120,7 +135,7 @@ function fillShape(
     ctx.fill()
     return
   }
-  fillRoundedRect(
+  traceRoundedRect(
     ctx,
     box.x,
     box.y,
@@ -128,6 +143,7 @@ function fillShape(
     box.h,
     Math.min(box.w, box.h) * 0.22,
   )
+  ctx.fill()
 }
 
 type PatternGroupOptions = {
@@ -141,13 +157,11 @@ type PatternGroupOptions = {
   quietZoneColor: string
   /** Drawn size of the mark, as a percentage of its module box. */
   scalePercent: number
-  margin: number
-  moduleCount: number
-  resolution: number
 }
 
 function drawPatternGroup(
   ctx: CanvasRenderingContext2D,
+  grid: ModuleGrid,
   {
     originRow,
     originCol,
@@ -158,36 +172,17 @@ function drawPatternGroup(
     centerColor,
     quietZoneColor,
     scalePercent,
-    margin,
-    moduleCount,
-    resolution,
   }: PatternGroupOptions,
 ) {
   const pupilModules = sizeModules === FINDER_SIZE ? 3 : 1
   const pupilInset = (sizeModules - pupilModules) / 2
-  const outer = moduleBox(
-    originRow,
-    originCol,
-    sizeModules,
-    margin,
-    moduleCount,
-    resolution,
-  )
-  const hole = moduleBox(
-    originRow + 1,
-    originCol + 1,
-    sizeModules - 2,
-    margin,
-    moduleCount,
-    resolution,
-  )
+  const outer = moduleBox(grid, originRow, originCol, sizeModules)
+  const hole = moduleBox(grid, originRow + 1, originCol + 1, sizeModules - 2)
   const pupil = moduleBox(
+    grid,
     originRow + pupilInset,
     originCol + pupilInset,
     pupilModules,
-    margin,
-    moduleCount,
-    resolution,
   )
 
   const scale = scalePercent / 100
@@ -202,17 +197,97 @@ function drawPatternGroup(
   fillShape(ctx, scaleBox(pupil, centerX, centerY, scale), centerShape)
 }
 
+function clipToContour(
+  ctx: CanvasRenderingContext2D,
+  shape: QrContourShape,
+  resolution: number,
+) {
+  const half = resolution / 2
+  if (shape === 'circle') {
+    ctx.beginPath()
+    ctx.arc(half, half, half, 0, Math.PI * 2)
+  } else if (shape === 'diamond') {
+    ctx.beginPath()
+    ctx.moveTo(half, 0)
+    ctx.lineTo(resolution, half)
+    ctx.lineTo(half, resolution)
+    ctx.lineTo(0, half)
+    ctx.closePath()
+  } else if (shape === 'rounded') {
+    traceRoundedRect(ctx, 0, 0, resolution, resolution, resolution * 0.2)
+  } else {
+    ctx.beginPath()
+    ctx.rect(0, 0, resolution, resolution)
+  }
+  ctx.clip()
+}
+
+/**
+ * Fills the band around the code with copies of its own data modules, tiled on
+ * the same lattice and clipped to the contour shape. Function patterns are left
+ * out on purpose: only "pixels" repeat, so no second set of finders competes
+ * with the real ones, and a quiet gap of at least
+ * {@link MIN_CONTOUR_GAP_MODULES} modules is kept around the code.
+ */
+function drawContourFill(
+  ctx: CanvasRenderingContext2D,
+  matrix: QrBitMatrix,
+  kinds: QrModuleKind[][],
+  grid: ModuleGrid,
+  style: QrStyle,
+  resolution: number,
+) {
+  const { size } = matrix
+  const first = -grid.margin - style.contour.width
+  const last = size - 1 + grid.margin + style.contour.width
+
+  ctx.save()
+  clipToContour(ctx, style.contour.shape, resolution)
+  ctx.fillStyle = style.contour.color
+
+  for (let row = first; row <= last; row += 1) {
+    const rowInsideCode = row >= -grid.margin && row < size + grid.margin
+    for (let col = first; col <= last; col += 1) {
+      if (rowInsideCode && col >= -grid.margin && col < size + grid.margin) {
+        continue
+      }
+      const sourceRow = ((row % size) + size) % size
+      const sourceCol = ((col % size) + size) % size
+      if (kinds[sourceRow]?.[sourceCol] !== 'data') continue
+      if (!matrix.get(sourceRow, sourceCol)) continue
+      fillShape(ctx, moduleBox(grid, row, col), style.contour.moduleShape)
+    }
+  }
+
+  ctx.restore()
+}
+
 export function drawStyledQr(
   ctx: CanvasRenderingContext2D,
   matrix: QrBitMatrix,
   { resolution, margin, style }: DrawStyledQrOptions,
-) {
+): QrCoreBox {
   const { size } = matrix
-  const moduleCount = size + margin * 2
   const kinds = classifyQrModules(size)
+  const contourWidth = style.contour.enabled ? style.contour.width : 0
+  // The fill starts outside a full quiet zone, so it never crowds the code.
+  const quietZone = style.contour.enabled
+    ? Math.max(margin, MIN_CONTOUR_GAP_MODULES)
+    : margin
+  const step = resolution / (size + (quietZone + contourWidth) * 2)
+  const grid: ModuleGrid = {
+    origin: contourWidth * step,
+    size: (size + quietZone * 2) * step,
+    margin: quietZone,
+    moduleCount: size + quietZone * 2,
+  }
 
   ctx.fillStyle = style.quietZoneColor
   ctx.fillRect(0, 0, resolution, resolution)
+
+  if (style.contour.enabled) {
+    drawContourFill(ctx, matrix, kinds, grid, style, resolution)
+  }
 
   for (let row = 0; row < size; row += 1) {
     for (let col = 0; col < size; col += 1) {
@@ -220,11 +295,7 @@ export function drawStyledQr(
       const kind = kinds[row]?.[col]
       if (!kind || GROUPED_KINDS.has(kind)) continue
 
-      const x0 = ((col + margin) / moduleCount) * resolution
-      const y0 = ((row + margin) / moduleCount) * resolution
-      const x1 = ((col + margin + 1) / moduleCount) * resolution
-      const y1 = ((row + margin + 1) / moduleCount) * resolution
-      const box = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
+      const box = moduleBox(grid, row, col)
 
       if (kind === 'timing') {
         ctx.fillStyle = style.timing.color
@@ -238,7 +309,7 @@ export function drawStyledQr(
   }
 
   for (const [originRow, originCol] of getFinderOrigins(size)) {
-    drawPatternGroup(ctx, {
+    drawPatternGroup(ctx, grid, {
       originRow,
       originCol,
       sizeModules: FINDER_SIZE,
@@ -248,14 +319,11 @@ export function drawStyledQr(
       centerColor: style.finder.centerColor,
       quietZoneColor: style.quietZoneColor,
       scalePercent: style.finder.scale,
-      margin,
-      moduleCount,
-      resolution,
     })
   }
 
   for (const [centerRow, centerCol] of getAlignmentCenters(size)) {
-    drawPatternGroup(ctx, {
+    drawPatternGroup(ctx, grid, {
       originRow: centerRow - ALIGNMENT_RADIUS,
       originCol: centerCol - ALIGNMENT_RADIUS,
       sizeModules: ALIGNMENT_SIZE,
@@ -265,9 +333,8 @@ export function drawStyledQr(
       centerColor: style.alignment.centerColor,
       quietZoneColor: style.quietZoneColor,
       scalePercent: style.alignment.scale,
-      margin,
-      moduleCount,
-      resolution,
     })
   }
+
+  return { origin: grid.origin, size: grid.size }
 }
