@@ -211,9 +211,29 @@ describe('drawStyledQr', () => {
       { size: 21, get: () => 0 },
       { resolution: 290, margin: 2, style: contourStyle({ width: 6 }) },
     )
-    // 21 modules + 4 quiet + 6 contour on each side = 41 modules of 7.07 px.
-    expect(withContour.origin).toBeCloseTo((290 / 41) * 6)
-    expect(withContour.size).toBeCloseTo((290 / 41) * 29)
+    // 21 modules + 2 margin + 6 contour on each side = 37 modules.
+    expect(withContour.origin).toBeCloseTo((290 / 37) * 6)
+    expect(withContour.size).toBeCloseTo((290 / 37) * 25)
+  })
+
+  it('gaps the fill by the QR margin, down to nothing at zero', () => {
+    const ctx = mockContext()
+    const fills = trackFills(ctx)
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      { size: 21, get: () => 1 },
+      { resolution: 290, margin: 0, style: contourStyle({ width: 4 }) },
+    )
+
+    // 21 modules + 0 margin + 4 contour per side => 29 modules of 10 px, and
+    // the code starts at 4 modules in, with the fill right up against it.
+    const step = 290 / 29
+    const contour = fills.filter((fill) => fill.color === '#ff0000')
+    const touching = contour.filter(
+      (fill) => Math.abs(fill.x + fill.w - step * 4) < 0.001,
+    )
+    expect(touching.length).toBeGreaterThan(0)
+    expect(contour.every((fill) => fill.x < step * 4 - 0.001 || fill.x >= step * 25 - 0.001 || fill.y < step * 4 - 0.001 || fill.y >= step * 25 - 0.001)).toBe(true)
   })
 
   it('clips the contour fill to the chosen outline', () => {
@@ -265,10 +285,10 @@ describe('drawStyledQr', () => {
 
     const contour = fills.filter((fill) => fill.color === '#ff0000')
     expect(contour.length).toBeGreaterThan(0)
-    // 21 modules + 4 quiet + 4 contour per side => 37 modules of 290/37 px.
-    const step = 290 / 37
+    // 21 modules + 2 margin + 4 contour per side => 33 modules of 290/33 px.
+    const step = 290 / 33
     const coreStart = step * 4
-    const coreEnd = coreStart + step * 29
+    const coreEnd = coreStart + step * 25
     const overlapping = contour.filter(
       ({ x, y, w, h }) =>
         x + w > coreStart + 0.001 &&

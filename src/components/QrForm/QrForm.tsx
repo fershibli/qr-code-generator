@@ -203,7 +203,7 @@ export function QrForm({
                 { value: DEFAULT_QR_MARGIN, label: `${DEFAULT_QR_MARGIN}` },
                 { value: MAX_QR_MARGIN, label: `${MAX_QR_MARGIN}` },
               ]}
-              helperText="Quiet zone around the QR code, in modules."
+              helperText="Quiet zone around the QR code, in modules. With a contour on, this is also the gap before the fill starts."
               onChange={onMarginChange}
             />
             <SliderField
