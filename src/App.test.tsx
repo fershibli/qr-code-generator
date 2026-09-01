@@ -34,9 +34,12 @@ describe('App', () => {
 
   it('generates a preview from a URL and downloads it', async () => {
     const user = userEvent.setup()
+    let downloadName: string | undefined
     const click = vi
       .spyOn(HTMLAnchorElement.prototype, 'click')
-      .mockImplementation(() => {})
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        downloadName = this.download
+      })
 
     render(
       <ColorModeProvider>
@@ -63,6 +66,7 @@ describe('App', () => {
     })
     await user.click(screen.getByRole('button', { name: 'Download' }))
     expect(click).toHaveBeenCalled()
+    expect(downloadName).toBe('example.com-500px.png')
     click.mockRestore()
   })
 

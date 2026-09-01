@@ -17,6 +17,7 @@ import {
 } from './constants'
 import { createDefaultQrStyle, type QrStyle } from './qrStyle'
 import { generateQrPng } from './utils/generateQrPng'
+import { buildQrFileName } from './utils/qrFileName'
 
 function downloadBlob(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob)
@@ -239,7 +240,7 @@ function App() {
                 disabled={!trimmedUrl || !blob}
                 onDownload={() => {
                   if (!blob || !trimmedUrl) return
-                  downloadBlob(blob, `qr-code-${resolution}x${resolution}.png`)
+                  downloadBlob(blob, buildQrFileName(trimmedUrl, resolution))
                 }}
               />
             </Box>
