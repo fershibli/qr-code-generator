@@ -53,7 +53,8 @@ describe('QrPreview', () => {
     renderWithTheme(
       <QrPreview
         previewUrl={null}
-        resolution={500}
+        width={500}
+        height={500}
         loading={false}
         error={null}
         disabled
@@ -76,7 +77,8 @@ describe('QrPreview', () => {
     renderWithTheme(
       <QrPreview
         previewUrl="blob:preview"
-        resolution={750}
+        width={750}
+        height={750}
         loading={false}
         error={null}
         disabled={false}
@@ -97,7 +99,8 @@ describe('QrPreview', () => {
     renderWithTheme(
       <QrPreview
         previewUrl="blob:preview"
-        resolution={500}
+        width={500}
+        height={500}
         version={7}
         moduleCount={45}
         loading={false}
@@ -113,7 +116,8 @@ describe('QrPreview', () => {
     renderWithTheme(
       <QrPreview
         previewUrl="blob:preview"
-        resolution={500}
+        width={500}
+        height={500}
         loading
         error="Failed to generate QR code"
         disabled={false}
@@ -131,7 +135,8 @@ describe('QrPreview', () => {
     renderWithTheme(
       <QrPreview
         previewUrl="blob:preview"
-        resolution={500}
+        width={500}
+        height={500}
         loading={false}
         error={null}
         disabled={false}

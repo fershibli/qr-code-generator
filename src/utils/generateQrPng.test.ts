@@ -41,7 +41,7 @@ describe('generateQrPng', () => {
     const result = await generateQrPng({
       url: 'https://example.com',
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 5,
     })
@@ -53,11 +53,25 @@ describe('generateQrPng', () => {
     expect(result.moduleCount).toBe(21)
   })
 
+  it('reports the requested size for a rectangular export', async () => {
+    const result = await generateQrPng({
+      url: 'https://example.com',
+      size: 20,
+      width: 250,
+      height: 400,
+      margin: 2,
+      logoPadding: 5,
+    })
+    expect(result.width).toBe(250)
+    expect(result.height).toBe(400)
+    expect(result.blob.type).toBe('image/png')
+  })
+
   it('keeps the automatic version when it already fits the density', async () => {
     const result = await generateQrPng({
       url: 'https://example.com',
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 5,
       minVersion: 1,
@@ -70,7 +84,7 @@ describe('generateQrPng', () => {
     const result = await generateQrPng({
       url: 'https://example.com',
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 5,
       minVersion: 10,
@@ -87,7 +101,7 @@ describe('generateQrPng', () => {
     await generateQrPng({
       url: 'https://example.com',
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 5,
       minVersion: 99,
@@ -105,7 +119,7 @@ describe('generateQrPng', () => {
     const result = await generateQrPng({
       url: 'https://example.com/a-long-payload',
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 5,
       minVersion: 5,
@@ -122,7 +136,7 @@ describe('generateQrPng', () => {
       url: 'https://example.com',
       logoFile: logo,
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 1,
       logoPadding: 10,
     })
@@ -137,7 +151,7 @@ describe('generateQrPng', () => {
         url: 'https://example.com',
         logoFile: logo,
         size: 20,
-        resolution: 250,
+        width: 250,
         margin: 2,
         logoPadding: 5,
       }),
@@ -154,7 +168,7 @@ describe('generateQrPng', () => {
       generateQrPng({
         url: 'https://example.com',
         size: 20,
-        resolution: 250,
+        width: 250,
         margin: 2,
         logoPadding: 5,
       }),
@@ -184,7 +198,7 @@ describe('generateQrPng', () => {
       url: 'https://example.com',
       logoFile: logo,
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 10,
     }
@@ -221,7 +235,7 @@ describe('generateQrPng', () => {
         type: 'image/png',
       }),
       size: 20,
-      resolution: 250,
+      width: 250,
       margin: 2,
       logoPadding: 10,
       style,

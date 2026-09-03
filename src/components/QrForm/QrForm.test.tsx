@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { DEFAULT_ADVANCED_RESOLUTION } from '../../constants'
 import { createDefaultQrStyle } from '../../qrStyle'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { QrForm } from './QrForm'
@@ -31,6 +32,10 @@ function formProps(overrides: Partial<Parameters<typeof QrForm>[0]> = {}) {
     onMinVersionChange: vi.fn(),
     resolution: 500 as const,
     onResolutionChange: vi.fn(),
+    advancedResolution: false,
+    onAdvancedResolutionChange: vi.fn(),
+    customResolution: DEFAULT_ADVANCED_RESOLUTION,
+    onCustomResolutionChange: vi.fn(),
     style: createDefaultQrStyle(),
     onStyleChange: vi.fn(),
     logoTransparentBackground: false,
@@ -77,6 +82,62 @@ describe('QrForm', () => {
     await user.click(screen.getByRole('combobox', { name: /Resolution/ }))
     await user.click(await screen.findByRole('option', { name: '750×750 px' }))
     expect(props.onResolutionChange).toHaveBeenCalledWith(750)
+  })
+
+  it('leaves advanced resolution off and shows the preset select', () => {
+    renderForm()
+    expect(
+      screen.getByRole('checkbox', { name: 'Advanced resolution' }),
+    ).not.toBeChecked()
+    expect(
+      screen.getByRole('combobox', { name: /Resolution/ }),
+    ).toBeInTheDocument()
+    expect(screen.queryByLabelText('Width')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Height')).not.toBeInTheDocument()
+  })
+
+  it('notifies parent when advanced resolution is checked', async () => {
+    const user = userEvent.setup()
+    const { props } = renderForm()
+    await user.click(
+      screen.getByRole('checkbox', { name: 'Advanced resolution' }),
+    )
+    expect(props.onAdvancedResolutionChange).toHaveBeenCalledWith(true)
+  })
+
+  it('swaps the preset select for width, height and unit when checked', () => {
+    renderForm({ advancedResolution: true })
+    expect(
+      screen.queryByRole('combobox', { name: /^Resolution/ }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Width')).toHaveValue(500)
+    expect(screen.getByLabelText('Height')).toHaveValue(500)
+    expect(screen.getByRole('combobox', { name: /Unit/ })).toBeInTheDocument()
+  })
+
+  it('notifies parent when the advanced width changes', async () => {
+    const user = userEvent.setup()
+    const { props } = renderForm({ advancedResolution: true })
+    const width = screen.getByLabelText('Width')
+    await user.clear(width)
+    await user.type(width, '7.5')
+    expect(props.onCustomResolutionChange).toHaveBeenLastCalledWith({
+      width: 7.5,
+      height: 500,
+      unit: 'px',
+    })
+  })
+
+  it('restates width and height in the unit that was picked', async () => {
+    const user = userEvent.setup()
+    const { props } = renderForm({ advancedResolution: true })
+    await user.click(screen.getByRole('combobox', { name: /Unit/ }))
+    await user.click(await screen.findByRole('option', { name: /Inches/ }))
+    expect(props.onCustomResolutionChange).toHaveBeenCalledWith({
+      width: 5.21,
+      height: 5.21,
+      unit: 'in',
+    })
   })
 
   it('reveals style controls when Customize style is clicked', async () => {

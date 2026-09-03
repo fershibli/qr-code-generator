@@ -19,7 +19,8 @@ type Story = StoryObj<typeof meta>
 export const Empty: Story = {
   args: {
     previewUrl: null,
-    resolution: 500,
+    width: 500,
+    height: 500,
     loading: false,
     error: null,
     disabled: true,
@@ -29,7 +30,8 @@ export const Empty: Story = {
 export const WithPreview: Story = {
   args: {
     previewUrl: SAMPLE_PREVIEW,
-    resolution: 750,
+    width: 750,
+    height: 750,
     loading: false,
     error: null,
     disabled: false,
@@ -39,7 +41,8 @@ export const WithPreview: Story = {
 export const Loading: Story = {
   args: {
     previewUrl: SAMPLE_PREVIEW,
-    resolution: 500,
+    width: 500,
+    height: 500,
     loading: true,
     error: null,
     disabled: false,
@@ -49,7 +52,8 @@ export const Loading: Story = {
 export const ErrorState: Story = {
   args: {
     previewUrl: null,
-    resolution: 500,
+    width: 500,
+    height: 500,
     loading: false,
     error: 'Failed to generate QR code',
     disabled: true,

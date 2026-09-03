@@ -25,7 +25,15 @@ export function slugifyUrl(url: string): string {
   return slug || FALLBACK_SLUG
 }
 
-/** File name for the downloaded PNG, e.g. `a.com.br-500px.png`. */
-export function buildQrFileName(url: string, resolution: number): string {
-  return `${slugifyUrl(url)}-${resolution}px.png`
+/**
+ * File name for the downloaded PNG, e.g. `a.com.br-500px.png`, or
+ * `a.com.br-500x750px.png` when the export is not square.
+ */
+export function buildQrFileName(
+  url: string,
+  width: number,
+  height: number = width,
+): string {
+  const size = width === height ? `${width}` : `${width}x${height}`
+  return `${slugifyUrl(url)}-${size}px.png`
 }

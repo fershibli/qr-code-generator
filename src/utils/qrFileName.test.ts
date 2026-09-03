@@ -48,6 +48,12 @@ describe('buildQrFileName', () => {
     )
   })
 
+  it('names both sides when the export is not square', () => {
+    expect(buildQrFileName('https://a.com.br', 500, 750)).toBe(
+      'a.com.br-500x750px.png',
+    )
+  })
+
   it('still names the file when the URL is unusable', () => {
     expect(buildQrFileName('', 250)).toBe('qr-code-250px.png')
   })

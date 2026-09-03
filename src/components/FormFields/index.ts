@@ -1,5 +1,6 @@
 export { ColorField } from './ColorField'
 export { FieldLabel } from './FieldLabel'
 export { FormSection } from './FormSection'
+export { NumberField } from './NumberField'
 export { SelectField, type SelectOption } from './SelectField'
 export { SliderField, type SliderMark } from './SliderField'
