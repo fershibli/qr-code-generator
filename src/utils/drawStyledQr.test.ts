@@ -323,6 +323,45 @@ describe('drawStyledQr', () => {
     expect(fills.filter((fill) => fill.color === '#ff0000')).toHaveLength(0)
   })
 
+  it('leaves no gap where a function pattern falls in the contour fill', () => {
+    const ctx = mockContext()
+    const fills = trackFills(ctx)
+    drawStyledQr(
+      ctx as unknown as CanvasRenderingContext2D,
+      matrixOfKind(21, true),
+      { resolution: 290, margin: 2, style: contourStyle({ width: 4 }) },
+    )
+    // Every data module is dark, so the substitutes drawn where the tiling hits
+    // a function pattern are dark too: the whole band is painted, with no
+    // finder- or timing-shaped holes left in it.
+    // 21 modules + 2 margin + 4 contour per side => 33² lattice cells, minus
+    // the 25² the code and its quiet zone take up.
+    expect(fills.filter((fill) => fill.color === '#ff0000')).toHaveLength(
+      33 * 33 - 25 * 25,
+    )
+  })
+
+  it('draws the same contour fill every time for the same code', () => {
+    const matrix = {
+      size: 21,
+      get: (row: number, col: number) =>
+        ((row * 7 + col * 3) % 5 < 2 ? 1 : 0),
+    }
+    const draw = () => {
+      const ctx = mockContext()
+      const fills = trackFills(ctx)
+      drawStyledQr(ctx as unknown as CanvasRenderingContext2D, matrix, {
+        resolution: 290,
+        margin: 2,
+        style: contourStyle({ width: 4 }),
+      })
+      return fills.filter((fill) => fill.color === '#ff0000')
+    }
+    const first = draw()
+    expect(first.length).toBeGreaterThan(0)
+    expect(draw()).toEqual(first)
+  })
+
   it('leaves the canvas untouched by the contour when it is off', () => {
     const ctx = mockContext()
     drawStyledQr(
