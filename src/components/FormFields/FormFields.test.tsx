@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { renderWithTheme } from '../../test/renderWithTheme'
 import { ColorField } from './ColorField'
 import { FormSection } from './FormSection'
+import { NumberField } from './NumberField'
 import { SelectField } from './SelectField'
 import { SliderField } from './SliderField'
 
@@ -127,6 +128,72 @@ describe('SelectField', () => {
     await user.click(screen.getByRole('combobox', { name: 'Contour shape' }))
     await user.click(await screen.findByRole('option', { name: 'Diamond' }))
     expect(onChange).toHaveBeenCalledWith('diamond')
+  })
+})
+
+describe('NumberField', () => {
+  it('renders the label, the value, and the unit suffix', () => {
+    renderWithTheme(
+      <NumberField label="Width" value={5.29} suffix="cm" onChange={vi.fn()} />,
+    )
+    expect(screen.getByLabelText('Width')).toHaveValue(5.29)
+    expect(screen.getByText('cm')).toBeInTheDocument()
+  })
+
+  it('reports every decimal as it is typed', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderWithTheme(
+      <NumberField label="Width" value={5} onChange={onChange} />,
+    )
+    const field = screen.getByLabelText('Width')
+    await user.clear(field)
+    await user.type(field, '7.5')
+    expect(onChange).toHaveBeenLastCalledWith(7.5)
+  })
+
+  it('leaves a half-typed number alone until the field is left', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderWithTheme(
+      <NumberField label="Width" value={5} min={1} onChange={onChange} />,
+    )
+    const field = screen.getByLabelText('Width')
+    await user.clear(field)
+    expect(field).toHaveValue(null)
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('clamps and rounds the value once the field is left', async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    renderWithTheme(
+      <NumberField
+        label="Width"
+        value={5}
+        min={1}
+        max={10}
+        decimals={1}
+        onChange={onChange}
+      />,
+    )
+    const field = screen.getByLabelText('Width')
+    await user.clear(field)
+    await user.type(field, '99.44')
+    await user.tab()
+    expect(onChange).toHaveBeenLastCalledWith(10)
+    expect(field).toHaveValue(10)
+  })
+
+  it('restores the current value when the field is left empty', async () => {
+    const user = userEvent.setup()
+    renderWithTheme(
+      <NumberField label="Width" value={5} onChange={vi.fn()} />,
+    )
+    const field = screen.getByLabelText('Width')
+    await user.clear(field)
+    await user.tab()
+    expect(field).toHaveValue(5)
   })
 })
 

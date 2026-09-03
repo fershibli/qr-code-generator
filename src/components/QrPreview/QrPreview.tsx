@@ -16,7 +16,8 @@ import { useElementOutOfView } from '../../hooks/useElementOutOfView'
 type QrPreviewProps = {
   previewUrl: string | null
   quietZoneColor?: string
-  resolution: number
+  width: number
+  height: number
   version?: number
   moduleCount?: number
   loading: boolean
@@ -126,7 +127,8 @@ function QrFrame({
 export function QrPreview({
   previewUrl,
   quietZoneColor = '#ffffff',
-  resolution,
+  width,
+  height,
   version,
   moduleCount,
   loading,
@@ -216,7 +218,7 @@ export function QrPreview({
                 color="text.secondary"
                 sx={{ textAlign: 'center', width: '100%' }}
               >
-                {resolution}x{resolution}px
+                {width}x{height}px
               </Typography>
             ) : null}
             {previewUrl && !disabled && version && moduleCount ? (

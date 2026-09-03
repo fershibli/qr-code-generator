@@ -28,7 +28,8 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 - Optional transparent logo backing so QR modules show through around the logo (the PNG stays opaque RGB). The switch is on the form, below the logo upload, and only appears after a logo is selected.
 - Adjustable quiet-zone margin (0–10 modules).
 - Export resolution from 250×250 through 1750×1750 px, in 250 px steps.
-- Downloads named after the encoded URL, such as `a.com.br-500px.png`.
+- **Advanced resolution** (off by default) swaps the preset list for a free width, height, and unit — px, mm, cm, in, pt, or pc — so the export can be sized for print and does not have to be square.
+- Downloads named after the encoded URL, such as `a.com.br-500px.png`, or `a.com.br-500x750px.png` when the export is not square.
 - Live preview always shown at 500×500 CSS pixels; download uses the selected resolution.
 - Light and dark theme, following the system by default or a stored preference.
 - Last 8 logos cached in IndexedDB for one-click reuse (removing the current logo does not clear the cache).
@@ -55,9 +56,18 @@ Leaving the field checks the address locally — no request is made. A valid one
 - **QR margin** is the quiet zone around the code, in modules (default 2).
 - **Module density** is the smallest QR version to encode with (default automatic).
 - **Resolution** is the exported PNG size. The preview stays 500×500 px; the caption under **Download** shows the file size, such as `500x500px`.
+- **Advanced resolution** is a checkbox under that field, unchecked by default. Checking it replaces the preset list with **Width**, **Height**, and **Unit**, seeded from the resolution that was selected.
 - **Customize style** expands a Style section on the same card: quiet-zone and data colors, finder/alignment/timing colors and shapes (square, rounded, circle, or triangle), position and alignment mark sizes, the contour fill, and **Reset to default**. Finder and alignment use one shape for the whole mark.
 
-### 3. Make the code denser
+### 3. Size the export yourself
+
+Check **Advanced resolution** to type the size instead of picking one. **Width** and **Height** take decimals and **Unit** covers pixels, millimeters, centimeters, inches, points, and picas; physical units convert at 96 px to the inch, the density browsers and design tools assume. Switching the unit restates the same size rather than reusing the number, so 500 px becomes 5.21 in.
+
+Each side is clamped to 64–4096 px once converted. The code itself stays square: on a rectangular export it is drawn at the shorter side, centered, with the quiet-zone color filling the rest — so the PNG matches the size you asked for and the code stays scannable.
+
+Unchecking the box goes back to the preset resolution that was selected.
+
+### 4. Make the code denser
 
 The number of squares is not a free choice: it comes from the QR *version*, which fixes the matrix at `4 × version + 17` modules per side. **Module density** sets the smallest version to encode with, from **Auto** through **40**, so the same short URL can be packed into a much finer grid.
 
@@ -65,7 +75,7 @@ The number of squares is not a free choice: it comes from the QR *version*, whic
 
 The app encodes once automatically and only re-encodes at your version when it is higher, so a long URL never fails because of this setting — it just keeps the version it needs. The caption under **Download** shows what came out, such as `Version 12 · 65×65 modules`.
 
-### 4. Resize the position and alignment marks
+### 5. Resize the position and alignment marks
 
 Under **Customize style**, **Position pattern size** and **Alignment pattern size** scale the whole drawn mark (60–140%) around its own center. The underlying modules stay exactly where the spec puts them; only the drawing changes.
 
@@ -73,7 +83,7 @@ Under **Customize style**, **Position pattern size** and **Alignment pattern siz
 
 Resizing the position marks is the one setting here that breaks scanning — see [Scannability](#scannability) — so the form warns as soon as it leaves 100%.
 
-### 5. Wrap the code in a contour
+### 6. Wrap the code in a contour
 
 **Contour** fills the space around the code with copies of its own pixels, clipped to an outline. Only data modules repeat: no second set of position or alignment marks is ever painted, so a scanner still sees exactly one code.
 
@@ -86,7 +96,7 @@ Resizing the position marks is the one setting here that breaks scanning — see
 
 **QR margin** doubles as the gap between the code and the fill: at 0 the band starts right at the code, so the two read as one field of pixels. The code shrinks to make room for the band, so the exported PNG stays the resolution you picked, and a centered logo shrinks with the code, keeping the same share of it.
 
-### 6. Optionally add a logo
+### 7. Optionally add a logo
 
 **Upload logo** accepts an image. Logo size (10–40%), logo padding (0–25%), and **Transparent logo background** appear only when a file is selected. Recent logos stay under the upload control for reuse. Transparent backing skips the opaque rectangle behind the logo so modules (and the logo’s own pixels) show through.
 
@@ -94,7 +104,7 @@ Resizing the position marks is the one setting here that breaks scanning — see
 
 Click **Download** to save the PNG. The file is named after the URL it encodes plus the export size — `https://a.com.br` at 500×500 saves as `a.com.br-500px.png`. The scheme, `www.`, and any trailing slash are dropped, accents are folded, anything else unsafe for a file name becomes a dash, and a URL that leaves nothing usable falls back to `qr-code`. Removing the current logo does not delete it from recents.
 
-### 7. Switch light and dark mode
+### 8. Switch light and dark mode
 
 Use the sun/moon switch in the header. The choice is stored in `localStorage` (`color-mode`). The QR preview frame uses the quiet-zone color so it matches the exported PNG.
 

@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { useState } from 'react'
 import { ColorField } from './ColorField'
 import { FormSection } from './FormSection'
+import { NumberField } from './NumberField'
 import { SelectField } from './SelectField'
 import { SliderField } from './SliderField'
 
@@ -19,6 +20,7 @@ function Fields() {
   const [shape, setShape] = useState('circle')
   const [width, setWidth] = useState(6)
   const [version, setVersion] = useState(1)
+  const [exportWidth, setExportWidth] = useState(5.29)
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 520 }}>
@@ -42,6 +44,20 @@ function Fields() {
             { value: 'diamond', label: 'Diamond' },
           ]}
           onChange={setShape}
+        />
+      </FormSection>
+
+      <FormSection title="Numbers" description="Decimal input with a unit.">
+        <NumberField
+          label="Width"
+          value={exportWidth}
+          min={0.67}
+          max={42.67}
+          step={0.1}
+          decimals={2}
+          suffix="cm"
+          helperText="Clamped and rounded once the field is left."
+          onChange={setExportWidth}
         />
       </FormSection>
 

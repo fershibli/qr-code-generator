@@ -6,6 +6,8 @@ import {
   DEFAULT_MIN_QR_VERSION,
   DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
+  DEFAULT_ADVANCED_RESOLUTION,
+  type AdvancedResolution,
   type Resolution,
 } from '../../constants'
 import { createDefaultQrStyle, type QrStyle } from '../../qrStyle'
@@ -45,6 +47,10 @@ function StatefulQrForm({
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [minVersion, setMinVersion] = useState(initialMinVersion)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
+  const [advancedResolution, setAdvancedResolution] = useState(false)
+  const [customResolution, setCustomResolution] = useState<AdvancedResolution>(
+    DEFAULT_ADVANCED_RESOLUTION,
+  )
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
   const [logoTransparentBackground, setLogoTransparentBackground] =
     useState(false)
@@ -72,6 +78,10 @@ function StatefulQrForm({
       onMinVersionChange={setMinVersion}
       resolution={resolution}
       onResolutionChange={setResolution}
+      advancedResolution={advancedResolution}
+      onAdvancedResolutionChange={setAdvancedResolution}
+      customResolution={customResolution}
+      onCustomResolutionChange={setCustomResolution}
       style={style}
       onStyleChange={setStyle}
       logoTransparentBackground={logoTransparentBackground}
@@ -100,6 +110,10 @@ const defaultArgs = {
   onMinVersionChange: () => {},
   resolution: DEFAULT_RESOLUTION,
   onResolutionChange: () => {},
+  advancedResolution: false,
+  onAdvancedResolutionChange: () => {},
+  customResolution: DEFAULT_ADVANCED_RESOLUTION,
+  onCustomResolutionChange: () => {},
   style: createDefaultQrStyle(),
   onStyleChange: () => {},
   logoTransparentBackground: false,

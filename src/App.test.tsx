@@ -81,6 +81,61 @@ describe('App', () => {
     click.mockRestore()
   })
 
+  it('exports the advanced width, height and unit, and names the file for it', async () => {
+    const user = userEvent.setup()
+    let downloadName: string | undefined
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(function (this: HTMLAnchorElement) {
+        downloadName = this.download
+      })
+    vi.mocked(generateQrPng).mockResolvedValue({
+      blob: new Blob(['png'], { type: 'image/png' }),
+      objectUrl: 'blob:qr-preview',
+      width: 192,
+      height: 288,
+      version: 3,
+      moduleCount: 29,
+    })
+
+    render(
+      <ColorModeProvider>
+        <App />
+      </ColorModeProvider>,
+    )
+    await typeUrl(user, 'https://example.com')
+    await waitFor(() => expect(generateQrPng).toHaveBeenCalled())
+
+    // The preset resolution carries over, so nothing jumps when it is checked.
+    await user.click(
+      screen.getByRole('checkbox', { name: 'Advanced resolution' }),
+    )
+    expect(screen.getByLabelText('Width')).toHaveValue(500)
+
+    await user.click(screen.getByRole('combobox', { name: /Unit/ }))
+    await user.click(await screen.findByRole('option', { name: /Inches/ }))
+
+    const width = screen.getByLabelText('Width')
+    await user.clear(width)
+    await user.type(width, '2')
+    const height = screen.getByLabelText('Height')
+    await user.clear(height)
+    await user.type(height, '3')
+
+    await waitFor(() => {
+      expect(generateQrPng).toHaveBeenLastCalledWith(
+        expect.objectContaining({ width: 192, height: 288 }),
+      )
+    })
+
+    await waitFor(() => {
+      expect(screen.getByAltText('QR code preview')).toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: 'Download' }))
+    expect(downloadName).toBe('example.com-192x288px.png')
+    click.mockRestore()
+  })
+
   it('starts with the scheme and waits for a destination', async () => {
     const user = userEvent.setup()
     render(

@@ -13,7 +13,10 @@ export type GenerateQrPngOptions = {
   url: string
   logoFile?: File | null
   size: number
-  resolution: number
+  /** Exported PNG width in pixels. */
+  width: number
+  /** Exported PNG height in pixels; defaults to `width`, i.e. a square. */
+  height?: number
   margin: number
   logoPadding: number
   style?: QrStyle
@@ -90,11 +93,37 @@ function drawCenteredLogo(
   ctx.drawImage(logo, drawX, drawY, drawWidth, drawHeight)
 }
 
+/** Centers the square code on a `width`x`height` quiet-zone-colored canvas. */
+function padToSize(
+  square: HTMLCanvasElement,
+  width: number,
+  height: number,
+  style: QrStyle,
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d', { alpha: false })
+  if (!ctx) {
+    throw new Error('Could not get canvas context')
+  }
+
+  ctx.fillStyle = style.quietZoneColor
+  ctx.fillRect(0, 0, width, height)
+  ctx.drawImage(
+    square,
+    (width - square.width) / 2,
+    (height - square.height) / 2,
+  )
+  return canvas
+}
+
 export async function generateQrPng({
   url,
   logoFile,
   size,
-  resolution,
+  width,
+  height = width,
   margin,
   logoPadding,
   style = DEFAULT_QR_STYLE,
@@ -103,9 +132,14 @@ export async function generateQrPng({
 }: GenerateQrPngOptions): Promise<GenerateQrPngResult> {
   const qr = createMatrix(url, minVersion)
 
+  // The code itself stays square: on a rectangular export it is drawn at the
+  // shorter side and centered, with the quiet zone color filling the rest.
+  const resolution = Math.min(width, height)
+  const square = width === height
+
   const canvas = document.createElement('canvas')
-  canvas.width = resolution
-  canvas.height = resolution
+  canvas.width = square ? width : resolution
+  canvas.height = square ? height : resolution
   const ctx = canvas.getContext('2d', { alpha: false })
   if (!ctx) {
     throw new Error('Could not get canvas context')
@@ -127,12 +161,14 @@ export async function generateQrPng({
     )
   }
 
-  const blob = await canvasToRgbPngBlob(canvas)
+  const output = square ? canvas : padToSize(canvas, width, height, style)
+
+  const blob = await canvasToRgbPngBlob(output)
   return {
     blob,
     objectUrl: URL.createObjectURL(blob),
-    width: resolution,
-    height: resolution,
+    width,
+    height,
     version: versionForModules(qr.modules.size),
     moduleCount: qr.modules.size,
   }

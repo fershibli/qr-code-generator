@@ -14,6 +14,11 @@ import {
   DEFAULT_MIN_QR_VERSION,
   DEFAULT_QR_MARGIN,
   DEFAULT_RESOLUTION,
+  DEFAULT_ADVANCED_RESOLUTION,
+  advancedResolutionToPixels,
+  pixelsToUnit,
+  roundForUnit,
+  type AdvancedResolution,
   type Resolution,
 } from './constants'
 import { createDefaultQrStyle, type QrStyle } from './qrStyle'
@@ -39,6 +44,10 @@ function App() {
   const [margin, setMargin] = useState(DEFAULT_QR_MARGIN)
   const [minVersion, setMinVersion] = useState(DEFAULT_MIN_QR_VERSION)
   const [resolution, setResolution] = useState<Resolution>(DEFAULT_RESOLUTION)
+  const [advancedResolution, setAdvancedResolution] = useState(false)
+  const [customResolution, setCustomResolution] = useState<AdvancedResolution>(
+    DEFAULT_ADVANCED_RESOLUTION,
+  )
   const [style, setStyle] = useState<QrStyle>(createDefaultQrStyle)
   const [logoTransparentBackground, setLogoTransparentBackground] =
     useState(false)
@@ -53,6 +62,25 @@ function App() {
 
   // The field starts holding the scheme, which is not something to encode yet.
   const trimmedUrl = checkUrl(url).status === 'empty' ? '' : url.trim()
+
+  const output = advancedResolution
+    ? advancedResolutionToPixels(customResolution)
+    : { width: resolution, height: resolution }
+
+  // Turning the advanced controls on carries the selected resolution over, so
+  // the export does not jump when the fields appear.
+  function handleAdvancedResolutionChange(enabled: boolean) {
+    if (enabled) {
+      setCustomResolution((current) => {
+        const side = roundForUnit(
+          pixelsToUnit(resolution, current.unit),
+          current.unit,
+        )
+        return { ...current, width: side, height: side }
+      })
+    }
+    setAdvancedResolution(enabled)
+  }
 
   function handleLogoChange(file: File | null) {
     setLogoPreviewUrl((previous) => {
@@ -72,7 +100,8 @@ function App() {
         url: trimmedUrl,
         logoFile,
         size,
-        resolution,
+        width: output.width,
+        height: output.height,
         margin,
         logoPadding,
         style,
@@ -122,7 +151,8 @@ function App() {
     trimmedUrl,
     logoFile,
     size,
-    resolution,
+    output.width,
+    output.height,
     margin,
     logoPadding,
     style,
@@ -213,6 +243,10 @@ function App() {
                 onMinVersionChange={setMinVersion}
                 resolution={resolution}
                 onResolutionChange={setResolution}
+                advancedResolution={advancedResolution}
+                onAdvancedResolutionChange={handleAdvancedResolutionChange}
+                customResolution={customResolution}
+                onCustomResolutionChange={setCustomResolution}
                 style={style}
                 onStyleChange={setStyle}
                 logoTransparentBackground={logoTransparentBackground}
@@ -235,7 +269,8 @@ function App() {
               <QrPreview
                 previewUrl={trimmedUrl ? previewUrl : null}
                 quietZoneColor={style.quietZoneColor}
-                resolution={resolution}
+                width={output.width}
+                height={output.height}
                 version={matrixInfo?.version}
                 moduleCount={matrixInfo?.moduleCount}
                 loading={Boolean(trimmedUrl) && loading}
@@ -243,7 +278,10 @@ function App() {
                 disabled={!trimmedUrl || !blob}
                 onDownload={() => {
                   if (!blob || !trimmedUrl) return
-                  downloadBlob(blob, buildQrFileName(trimmedUrl, resolution))
+                  downloadBlob(
+                    blob,
+                    buildQrFileName(trimmedUrl, output.width, output.height),
+                  )
                 }}
               />
             </Box>

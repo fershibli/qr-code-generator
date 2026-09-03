@@ -1,6 +1,7 @@
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Checkbox from '@mui/material/Checkbox'
 import Collapse from '@mui/material/Collapse'
 import Divider from '@mui/material/Divider'
 import FormControlLabel from '@mui/material/FormControlLabel'
@@ -22,18 +23,34 @@ import {
   MIN_LOGO_PADDING,
   MIN_QR_VERSION,
   RESOLUTIONS,
+  RESOLUTION_UNITS,
+  RESOLUTION_UNIT_INFO,
+  convertResolution,
   modulesForVersion,
+  resolutionBoundsIn,
+  type AdvancedResolution,
   type Resolution,
+  type ResolutionUnit,
 } from '../../constants'
 import type { QrStyle } from '../../qrStyle'
 import { checkUrl } from '../../utils/urlValidation'
-import { FormSection, SelectField, SliderField } from '../FormFields'
+import {
+  FormSection,
+  NumberField,
+  SelectField,
+  SliderField,
+} from '../FormFields'
 import { LogoUpload } from '../LogoUpload'
 import { QrStyleForm } from '../QrStyleForm'
 
 const RESOLUTION_OPTIONS = RESOLUTIONS.map((value) => ({
   value,
   label: `${value}×${value} px`,
+}))
+
+const RESOLUTION_UNIT_OPTIONS = RESOLUTION_UNITS.map((value) => ({
+  value,
+  label: RESOLUTION_UNIT_INFO[value].label,
 }))
 
 type QrFormProps = {
@@ -52,6 +69,10 @@ type QrFormProps = {
   onMinVersionChange: (value: number) => void
   resolution: Resolution
   onResolutionChange: (value: Resolution) => void
+  advancedResolution: boolean
+  onAdvancedResolutionChange: (value: boolean) => void
+  customResolution: AdvancedResolution
+  onCustomResolutionChange: (value: AdvancedResolution) => void
   style: QrStyle
   onStyleChange: (style: QrStyle) => void
   logoTransparentBackground: boolean
@@ -75,6 +96,10 @@ export function QrForm({
   onMinVersionChange,
   resolution,
   onResolutionChange,
+  advancedResolution,
+  onAdvancedResolutionChange,
+  customResolution,
+  onCustomResolutionChange,
   style,
   onStyleChange,
   logoTransparentBackground,
@@ -87,6 +112,8 @@ export function QrForm({
   // the message straight away.
   const urlCheck = checkUrl(url)
   const showUrlCheck = urlTouched && urlCheck.status !== 'empty'
+  const unitInfo = RESOLUTION_UNIT_INFO[customResolution.unit]
+  const unitBounds = resolutionBoundsIn(customResolution.unit)
   const densityModules = modulesForVersion(minVersion)
   const densityLabel =
     minVersion > MIN_QR_VERSION
@@ -243,11 +270,74 @@ export function QrForm({
               helperText="Smallest QR version to encode with. Higher versions pack more, smaller squares; the version rises on its own when the URL needs more room."
               onChange={onMinVersionChange}
             />
-            <SelectField
-              label="Resolution"
-              value={resolution}
-              options={RESOLUTION_OPTIONS}
-              onChange={(value) => onResolutionChange(value as Resolution)}
+            {advancedResolution ? (
+              <Stack spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <NumberField
+                      label="Width"
+                      value={customResolution.width}
+                      min={unitBounds.min}
+                      max={unitBounds.max}
+                      step={unitInfo.step}
+                      decimals={unitInfo.decimals}
+                      suffix={customResolution.unit}
+                      onChange={(width) =>
+                        onCustomResolutionChange({ ...customResolution, width })
+                      }
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <NumberField
+                      label="Height"
+                      value={customResolution.height}
+                      min={unitBounds.min}
+                      max={unitBounds.max}
+                      step={unitInfo.step}
+                      decimals={unitInfo.decimals}
+                      suffix={customResolution.unit}
+                      onChange={(height) =>
+                        onCustomResolutionChange({
+                          ...customResolution,
+                          height,
+                        })
+                      }
+                    />
+                  </Box>
+                </Stack>
+                <SelectField
+                  label="Unit"
+                  value={customResolution.unit}
+                  options={RESOLUTION_UNIT_OPTIONS}
+                  onChange={(value) =>
+                    onCustomResolutionChange(
+                      convertResolution(
+                        customResolution,
+                        value as ResolutionUnit,
+                      ),
+                    )
+                  }
+                />
+              </Stack>
+            ) : (
+              <SelectField
+                label="Resolution"
+                value={resolution}
+                options={RESOLUTION_OPTIONS}
+                onChange={(value) => onResolutionChange(value as Resolution)}
+              />
+            )}
+            <FormControlLabel
+              sx={{ mr: 0 }}
+              control={
+                <Checkbox
+                  checked={advancedResolution}
+                  onChange={(event) =>
+                    onAdvancedResolutionChange(event.target.checked)
+                  }
+                />
+              }
+              label="Advanced resolution"
             />
           </FormSection>
 
