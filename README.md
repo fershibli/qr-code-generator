@@ -23,7 +23,7 @@ A single-page React app that turns a URL into an RGB PNG QR code, with an option
 - Optional centered logo, with size and padding sliders that appear only after a logo is selected.
 - Collapsible **Customize style** controls for quiet-zone, data, finder, alignment, and timing colors and shapes. Finder and alignment shapes apply to the whole pattern (square, rounded, circle, or triangle), not each module.
 - **Position and alignment mark size** (60–140%), applied to the whole mark. The 7×7 finder box the spec defines never moves; only the drawn shape grows or shrinks around its center.
-- **Contour fill**: wrap the code in a circle, square, rounded square, or diamond filled with copies of the code's own data modules — no position, alignment, or timing marks — from 1 to 16 modules wide.
+- **Contour fill**: wrap the code in a circle, square, rounded square, or diamond filled with copies of the code's own data modules — no position, alignment, or timing marks, their places taken by other data modules so the band has no holes — from 1 to 16 modules wide.
 - On desktop the form scrolls inside the left card so the preview stays in view. On mobile the preview sits above the form; a compact 20vh bar (QR + Download) appears only while that card is scrolled out of view.
 - Optional transparent logo backing so QR modules show through around the logo (the PNG stays opaque RGB). The switch is on the form, below the logo upload, and only appears after a logo is selected.
 - Adjustable quiet-zone margin (0–10 modules).
@@ -85,7 +85,7 @@ Resizing the position marks is the one setting here that breaks scanning — see
 
 ### 6. Wrap the code in a contour
 
-**Contour** fills the space around the code with copies of its own pixels, clipped to an outline. Only data modules repeat: no second set of position or alignment marks is ever painted, so a scanner still sees exactly one code.
+**Contour** fills the space around the code with copies of its own pixels, clipped to an outline. Only data modules repeat: no second set of position or alignment marks is ever painted, so a scanner still sees exactly one code. Where a position, alignment, or timing mark falls in the tiling, another data module of the same code is drawn in its place, so the band keeps an even texture instead of showing the mark's silhouette as a gap.
 
 ![A circular purple contour of QR pixels around the code](docs/screenshots/contour.png)
 
@@ -125,13 +125,13 @@ Every option here was checked by generating the PNG in the running app (Playwrig
 
 Scanners derive the module size from the three position patterns, so a mark drawn larger or smaller than its 7×7 box makes the decoder sample the grid at the wrong pitch. The control is still there — other generators offer it too — but the style form shows a warning while it is off 100%, and codes made that way should be tested on a real scanner before being published.
 
-The contour fill never repeats a function pattern, which is what keeps it from competing with the real position marks. The gap between the code and the fill is yours to set: decoding held at every QR margin from 0 to 6 modules, including 0, where the fill touches the code. Four modules is still what the spec asks for, so keep the margin up if the code is going to print or be scanned from a distance.
+The contour fill never repeats a function pattern, which is what keeps it from competing with the real position marks. The modules substituted in their place are picked from the code's own data with a hash of the lattice position, so the band is dense and repeatable without ever tracing a mark. The gap between the code and the fill is yours to set: decoding held at every QR margin from 0 to 6 modules, including 0, where the fill touches the code. Four modules is still what the spec asks for, so keep the margin up if the code is going to print or be scanned from a distance.
 
 ## Architecture
 
 The UI is a single page. `App` owns form state, debounces generation, and hands a blob to the preview for download. QR drawing is client-side: `qrcode` builds the bit matrix (`QRCode.create`, re-run at a higher version when the density slider asks for one), modules are classified and painted on a canvas with per-region colors, shapes, and mark sizes, an optional logo is composited in the center, and a custom encoder writes an RGB PNG (color type 2) via `fflate`.
 
-`drawStyledQr` places the code and the contour band on one module lattice: the canvas is divided into `size + (quietZone + contourWidth) × 2` modules, the code occupies the middle square, and the band outside it repeats the code's data modules, clipped to the contour outline. It returns the box the code occupies so the logo scales with the code rather than with the canvas.
+`drawStyledQr` places the code and the contour band on one module lattice: the canvas is divided into `size + (quietZone + contourWidth) × 2` modules, the code occupies the middle square, and the band outside it repeats the code's data modules — substituting another data module wherever a function pattern would land — clipped to the contour outline. It returns the box the code occupies so the logo scales with the code rather than with the canvas.
 
 ```mermaid
 flowchart LR

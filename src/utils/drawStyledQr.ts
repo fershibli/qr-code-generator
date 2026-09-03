@@ -221,12 +221,42 @@ function clipToContour(
   ctx.clip()
 }
 
+/** Every data module of the code, in reading order, as 0 or 1. */
+function collectDataBits(
+  matrix: QrBitMatrix,
+  kinds: QrModuleKind[][],
+): number[] {
+  const bits: number[] = []
+  for (let row = 0; row < matrix.size; row += 1) {
+    for (let col = 0; col < matrix.size; col += 1) {
+      if (kinds[row]?.[col] !== 'data') continue
+      bits.push(matrix.get(row, col) ? 1 : 0)
+    }
+  }
+  return bits
+}
+
+/**
+ * Stable scramble of a lattice position, used to pick the substitute module.
+ * It has to be a pure function of the coordinates so a redraw of the same code
+ * paints the same contour instead of shuffling on every render.
+ */
+function hashCell(row: number, col: number): number {
+  let hash = Math.imul(row, 0x27d4eb2d) ^ Math.imul(col, 0x165667b1)
+  hash = Math.imul(hash ^ (hash >>> 15), 0x2c1b3c6d)
+  hash = Math.imul(hash ^ (hash >>> 12), 0x297a2d39)
+  return (hash ^ (hash >>> 15)) >>> 0
+}
+
 /**
  * Fills the band around the code with copies of its own data modules, tiled on
- * the same lattice and clipped to the contour shape. Function patterns are left
- * out on purpose: only "pixels" repeat, so no second set of finders competes
- * with the real ones. The gap between the code and the fill is the QR margin,
- * so setting that to zero makes the fill start right at the code.
+ * the same lattice and clipped to the contour shape. Function patterns are
+ * never copied: no second set of finders competes with the real ones. Where one
+ * falls in the tiling, the module is drawn from another data module picked by
+ * `hashCell` instead, so the band keeps the texture and density of the code
+ * rather than showing the pattern's silhouette as a hole. The gap between the
+ * code and the fill is the QR margin, so setting that to zero makes the fill
+ * start right at the code.
  */
 function drawContourFill(
   ctx: CanvasRenderingContext2D,
@@ -239,6 +269,7 @@ function drawContourFill(
   const { size } = matrix
   const first = -grid.margin - style.contour.width
   const last = size - 1 + grid.margin + style.contour.width
+  const dataBits = collectDataBits(matrix, kinds)
 
   ctx.save()
   clipToContour(ctx, style.contour.shape, resolution)
@@ -252,8 +283,11 @@ function drawContourFill(
       }
       const sourceRow = ((row % size) + size) % size
       const sourceCol = ((col % size) + size) % size
-      if (kinds[sourceRow]?.[sourceCol] !== 'data') continue
-      if (!matrix.get(sourceRow, sourceCol)) continue
+      const isData = kinds[sourceRow]?.[sourceCol] === 'data'
+      const dark = isData
+        ? matrix.get(sourceRow, sourceCol) !== 0
+        : dataBits[hashCell(row, col) % dataBits.length] === 1
+      if (!dark) continue
       fillShape(ctx, moduleBox(grid, row, col), style.contour.moduleShape)
     }
   }
